@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://o10dhamjm38d"
+path="res://.godot/imported/bass-wiggle-297877-[AudioTrimmer.com] (1).mp3-91875179995cdd79ae6124b5bd9f7a64.mp3str"
+
+[deps]
+
+source_file="res://sounds/bass-wiggle-297877-[AudioTrimmer.com] (1).mp3"
+dest_files=["res://.godot/imported/bass-wiggle-297877-[AudioTrimmer.com] (1).mp3-91875179995cdd79ae6124b5bd9f7a64.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

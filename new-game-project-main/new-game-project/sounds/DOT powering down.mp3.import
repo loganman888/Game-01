@@ -1,0 +1,19 @@
+[remap]
+
+importer="mp3"
+type="AudioStreamMP3"
+uid="uid://tk0ii05ecjkh"
+path="res://.godot/imported/DOT powering down.mp3-b10be8713bc86a3eba705a99766256c5.mp3str"
+
+[deps]
+
+source_file="res://sounds/DOT powering down.mp3"
+dest_files=["res://.godot/imported/DOT powering down.mp3-b10be8713bc86a3eba705a99766256c5.mp3str"]
+
+[params]
+
+loop=false
+loop_offset=0
+bpm=0
+beat_count=0
+bar_beats=4

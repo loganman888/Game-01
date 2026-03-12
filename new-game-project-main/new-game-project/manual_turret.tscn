@@ -1,0 +1,54 @@
+[gd_scene load_steps=7 format=3 uid="uid://bkrthnpmtmk15"]
+
+[ext_resource type="Script" uid="uid://c1bhcs7nlf2j0" path="res://manual_turret.gd" id="1_6k702"]
+[ext_resource type="AudioStream" uid="uid://b5wry1ocdhxs8" path="res://sounds/11L-The_sound_of_a_hyper-1746045183912-[AudioTrimmer.com] (1).mp3" id="2_6lbuf"]
+[ext_resource type="AudioStream" uid="uid://blwhwujad3gta" path="res://sounds/11L-The_sound_of_a_bomb_-1746046754267.mp3" id="3_6lbuf"]
+
+[sub_resource type="TorusMesh" id="TorusMesh_erk02"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_58onu"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_6jx8h"]
+
+[node name="ManualTurret" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("1_6k702")
+damage_delay = 1.1
+
+[node name="RotationBase" type="Node3D" parent="."]
+
+[node name="TurretModel" type="MeshInstance3D" parent="RotationBase"]
+transform = Transform3D(1, 0, 0, 0, -4.37114e-08, -1, 0, 1, -4.37114e-08, 0, 0, 0)
+mesh = SubResource("TorusMesh_erk02")
+
+[node name="ProjectileSpawn" type="Node3D" parent="RotationBase"]
+
+[node name="DetectionArea" type="Area3D" parent="."]
+transform = Transform3D(1.6, 0, 0, 0, 1, 0, 0, 0, 0.91, 0, 0, 0)
+collision_layer = 8
+collision_mask = 8
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectionArea"]
+transform = Transform3D(1.32, 0, 0, 0, 1, 0, 0, 0, 0.734874, 0, 0, 0)
+shape = SubResource("CylinderShape3D_58onu")
+
+[node name="PickupDetectionArea" type="Area3D" parent="."]
+transform = Transform3D(2.4, 0, 0, 0, 0.96, 0, 0, 0, 0.99, 0, 0, 0)
+collision_layer = 32
+collision_mask = 32
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupDetectionArea"]
+transform = Transform3D(0.858943, 0, 0, 0, 1, 0, 0, 0, 0.677209, 0, 0, 0)
+shape = SubResource("CylinderShape3D_6jx8h")
+
+[node name="FireSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_6lbuf")
+
+[node name="ImpactSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("3_6lbuf")
+max_db = 6.0
+
+[connection signal="body_entered" from="DetectionArea" to="." method="_on_detection_area_body_entered"]
+[connection signal="body_exited" from="DetectionArea" to="." method="_on_detection_area_body_exited"]
+[connection signal="body_entered" from="PickupDetectionArea" to="." method="_on_pickup_detection_area_body_entered"]
+[connection signal="body_exited" from="PickupDetectionArea" to="." method="_on_pickup_detection_area_body_exited"]

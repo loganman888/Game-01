@@ -1,0 +1,70 @@
+[gd_scene load_steps=9 format=3 uid="uid://c065s3htgr1ld"]
+
+[sub_resource type="Gradient" id="Gradient_gnfhq"]
+colors = PackedColorArray(0, 0, 0.501961, 1, 0.0110876, 0.0110876, 0.0110876, 1)
+
+[sub_resource type="GradientTexture2D" id="GradientTexture2D_f1roh"]
+gradient = SubResource("Gradient_gnfhq")
+fill_from = Vector2(1, 0.582418)
+
+[sub_resource type="PhysicalSkyMaterial" id="PhysicalSkyMaterial_aipo0"]
+night_sky = SubResource("GradientTexture2D_f1roh")
+
+[sub_resource type="Sky" id="Sky_imw6s"]
+sky_material = SubResource("PhysicalSkyMaterial_aipo0")
+
+[sub_resource type="Environment" id="Environment_p3vx2"]
+background_mode = 2
+sky = SubResource("Sky_imw6s")
+
+[sub_resource type="Animation" id="Animation_wsgjt"]
+length = 0.001
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("DirectionalLight3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0),
+"transitions": PackedFloat32Array(1),
+"update": 0,
+"values": [Vector3(0, 0, 0)]
+}
+
+[sub_resource type="Animation" id="Animation_cdnad"]
+resource_name = "daynightcycle"
+length = 60.0
+loop_mode = 1
+tracks/0/type = "value"
+tracks/0/imported = false
+tracks/0/enabled = true
+tracks/0/path = NodePath("DirectionalLight3D:rotation")
+tracks/0/interp = 1
+tracks/0/loop_wrap = true
+tracks/0/keys = {
+"times": PackedFloat32Array(0, 60),
+"transitions": PackedFloat32Array(1, 1),
+"update": 0,
+"values": [Vector3(0, 0, 0), Vector3(6.28319, 0, 0)]
+}
+
+[sub_resource type="AnimationLibrary" id="AnimationLibrary_i32js"]
+_data = {
+&"RESET": SubResource("Animation_wsgjt"),
+&"daynightcycle": SubResource("Animation_cdnad")
+}
+
+[node name="DayNightCycle" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_p3vx2")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2, 0)
+
+[node name="AnimationPlayer" type="AnimationPlayer" parent="."]
+libraries = {
+&"": SubResource("AnimationLibrary_i32js")
+}
+autoplay = "daynightcycle"

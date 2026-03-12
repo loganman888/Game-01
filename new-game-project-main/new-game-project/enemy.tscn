@@ -1,0 +1,44 @@
+[gd_scene load_steps=7 format=3 uid="uid://cpue3a3gyfksg"]
+
+[ext_resource type="Script" uid="uid://m0h54jn181wd" path="res://enemy.gd" id="1_7k104"]
+[ext_resource type="PackedScene" uid="uid://cfuxub1menc4r" path="res://health_component.tscn" id="2_4gyqm"]
+[ext_resource type="Script" uid="uid://dutcferf0gkxw" path="res://enemy_health_display.gd" id="3_iifgy"]
+[ext_resource type="PackedScene" uid="uid://dhmuglnnbucmr" path="res://health_bar.tscn" id="4_epg4t"]
+[ext_resource type="PackedScene" uid="uid://bxc31nwt2layf" path="res://knight.tscn" id="5_epg4t"]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_qi2p4"]
+
+[node name="Enemy" type="CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+collision_layer = 5
+collision_mask = 17
+script = ExtResource("1_7k104")
+separation_radius = 5.0
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+target_desired_distance = 0.5
+avoidance_enabled = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1.092, 0, 0, 0, 1.0368, 0, 0, 0, 1.1, 0, 0, 0)
+shape = SubResource("CapsuleShape3D_qi2p4")
+
+[node name="HealthComponent" parent="." instance=ExtResource("2_4gyqm")]
+
+[node name="HealthBarSprite" type="Sprite3D" parent="."]
+billboard = 1
+no_depth_test = true
+fixed_size = true
+script = ExtResource("3_iifgy")
+
+[node name="SubViewport" type="SubViewport" parent="HealthBarSprite"]
+transparent_bg = true
+size = Vector2i(100, 20)
+
+[node name="HealthBar" parent="HealthBarSprite/SubViewport" instance=ExtResource("4_epg4t")]
+
+[node name="Knight" parent="." instance=ExtResource("5_epg4t")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.27898, 0)
+
+[connection signal="target_reached" from="NavigationAgent3D" to="." method="_on_navigation_agent_3d_target_reached"]
+[connection signal="velocity_computed" from="NavigationAgent3D" to="." method="_on_navigation_agent_3d_velocity_computed"]

@@ -1,0 +1,53 @@
+[gd_scene load_steps=6 format=3 uid="uid://c66wwcmtmi5wj"]
+
+[ext_resource type="Script" uid="uid://bn3dji0o7xgvr" path="res://slow_turret.gd" id="1_vxp1n"]
+[ext_resource type="AudioStream" uid="uid://dkqq3tu0vwo3c" path="res://sounds/slow turret effect (2).mp3" id="2_avfjy"]
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_vxp1n"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_58onu"]
+
+[sub_resource type="CylinderShape3D" id="CylinderShape3D_6jx8h"]
+
+[node name="SlowTurret" type="Node3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("1_vxp1n")
+effect_range = 15.0
+
+[node name="RotationBase" type="Node3D" parent="."]
+
+[node name="TurretModel" type="MeshInstance3D" parent="RotationBase"]
+transform = Transform3D(0.5, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0, 0)
+mesh = SubResource("CylinderMesh_vxp1n")
+
+[node name="ProjectileSpawn" type="Node3D" parent="RotationBase"]
+
+[node name="DetectionArea" type="Area3D" parent="."]
+collision_layer = 8
+collision_mask = 8
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectionArea"]
+transform = Transform3D(0.66, 0, 0, 0, 0.312, 0, 0, 0, 1.32, 0, 0, 0)
+shape = SubResource("CylinderShape3D_58onu")
+
+[node name="PickupDetectionArea" type="Area3D" parent="."]
+transform = Transform3D(1.5, 0, 0, 0, 1.2, 0, 0, 0, 1.1, 0, 0, 0)
+collision_layer = 32
+collision_mask = 32
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupDetectionArea"]
+transform = Transform3D(0.4, 0, 0, 0, 0.3, 0, 0, 0, 1, 0, 0, 0)
+shape = SubResource("CylinderShape3D_6jx8h")
+
+[node name="ActivationSound" type="AudioStreamPlayer3D" parent="."]
+
+[node name="EffectSound" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_avfjy")
+parameters/looping = true
+
+[node name="WindDownSound" type="AudioStreamPlayer3D" parent="."]
+
+[connection signal="body_entered" from="DetectionArea" to="." method="_on_detection_area_body_entered"]
+[connection signal="body_exited" from="DetectionArea" to="." method="_on_detection_area_body_exited"]
+[connection signal="body_entered" from="PickupDetectionArea" to="." method="_on_pickup_detection_area_body_entered"]
+[connection signal="body_exited" from="PickupDetectionArea" to="." method="_on_pickup_detection_area_body_exited"]

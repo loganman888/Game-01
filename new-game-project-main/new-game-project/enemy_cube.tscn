@@ -1,0 +1,47 @@
+[gd_scene load_steps=7 format=3 uid="uid://cartpijb8hnfu"]
+
+[ext_resource type="Script" uid="uid://dol1x8h5okuwg" path="res://enemy_cube.gd" id="1_p0rx0"]
+[ext_resource type="PackedScene" uid="uid://cfuxub1menc4r" path="res://health_component.tscn" id="2_dgalw"]
+[ext_resource type="Script" uid="uid://dutcferf0gkxw" path="res://enemy_health_display.gd" id="3_sg5op"]
+[ext_resource type="PackedScene" uid="uid://dhmuglnnbucmr" path="res://health_bar.tscn" id="4_8qpwk"]
+[ext_resource type="PackedScene" uid="uid://cbeda050qf78o" path="res://enemycubeskin.tscn" id="5_8qpwk"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_dgalw"]
+size = Vector3(1, 1.5011, 1)
+
+[node name="EnemyCube" type="CharacterBody3D"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+collision_layer = 5
+collision_mask = 17
+script = ExtResource("1_p0rx0")
+speed = 5.0
+separation_radius = 5.0
+
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+target_desired_distance = 0.5
+avoidance_enabled = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1.092, 0, 0, 0, 0.673581, 0, 0, 0, 1.1, 0, -0.227448, 0)
+shape = SubResource("BoxShape3D_dgalw")
+
+[node name="HealthComponent" parent="." instance=ExtResource("2_dgalw")]
+MaxHealth = 150.0
+
+[node name="HealthBarSprite" type="Sprite3D" parent="."]
+billboard = 1
+no_depth_test = true
+fixed_size = true
+script = ExtResource("3_sg5op")
+
+[node name="SubViewport" type="SubViewport" parent="HealthBarSprite"]
+transparent_bg = true
+size = Vector2i(100, 20)
+
+[node name="HealthBar" parent="HealthBarSprite/SubViewport" instance=ExtResource("4_8qpwk")]
+
+[node name="base_basic_pbr" parent="." instance=ExtResource("5_8qpwk")]
+transform = Transform3D(0.571974, 0, 0, 0, 0.577854, 0, 0, 0, 0.620906, 0, -0.732701, 0)
+
+[connection signal="target_reached" from="NavigationAgent3D" to="." method="_on_navigation_agent_3d_target_reached"]
+[connection signal="velocity_computed" from="NavigationAgent3D" to="." method="_on_navigation_agent_3d_velocity_computed"]

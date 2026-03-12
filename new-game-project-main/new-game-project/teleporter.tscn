@@ -1,0 +1,23 @@
+[gd_scene load_steps=5 format=3 uid="uid://bvvfk055lh5te"]
+
+[ext_resource type="Script" uid="uid://bjprdqqsff67u" path="res://teleporter.gd" id="1_eumkw"]
+[ext_resource type="AudioStream" uid="uid://o10dhamjm38d" path="res://sounds/bass-wiggle-297877-[AudioTrimmer.com] (1).mp3" id="2_tuehi"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tuehi"]
+
+[sub_resource type="RibbonTrailMesh" id="RibbonTrailMesh_kk6yu"]
+
+[node name="Teleporter" type="Area3D"]
+script = ExtResource("1_eumkw")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 0.1, 0, 0, 0)
+shape = SubResource("BoxShape3D_tuehi")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="."]
+mesh = SubResource("RibbonTrailMesh_kk6yu")
+
+[node name="AudioStreamPlayer3D" type="AudioStreamPlayer3D" parent="."]
+stream = ExtResource("2_tuehi")
+
+[node name="GPUParticles3D" type="GPUParticles3D" parent="."]
