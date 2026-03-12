@@ -115,7 +115,7 @@ func complete_current_wave():
 func define_waves(enemy_scenes: Dictionary):
 	# Wave 1: 5 cubes
 	var wave1 = Wave.new()
-	wave1.add_enemy(enemy_scenes["knight"], 10)
+	wave1.add_enemy(enemy_scenes["knight"], 3)
 	waves.append(wave1)
 	
 	# Wave 2: 10 knights, 5 healers

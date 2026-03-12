@@ -16,6 +16,7 @@ const SCORE_VALUE: int = 100
 @onready var health_component: Node = $HealthComponent
 @onready var knight_model = $Knight
 @onready var animation_player = $Knight/AnimationPlayer
+@onready var debug_label = $DebugLabel #
 
 @export var collision_safe_margin: float = 0.001
 
@@ -52,6 +53,10 @@ func _physics_process(delta: float) -> void:
 	if not target:
 		return
 		
+	if debug_label:
+		# Update the text to show the exact current speed
+		debug_label.text = "Speed: " + str(snapped(current_speed, 0.01))
+	
 	update_movement(delta)
 	check_attack()
 	move_and_slide()
@@ -77,6 +82,10 @@ func update_movement(delta: float) -> void:
 	# Apply separation from other enemies
 	var separation = calculate_separation()
 	target_velocity += separation
+	
+	# Prevent the separation force from making them move faster than their current max speed
+	if target_velocity.length() > current_speed:
+		target_velocity = target_velocity.normalized() * current_speed
 	
 	# Apply gravity
 	if not is_on_floor():

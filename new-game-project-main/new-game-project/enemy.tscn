@@ -1,4 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://cpue3a3gyfksg"]
+[gd_scene format=3 uid="uid://cpue3a3gyfksg"]
 
 [ext_resource type="Script" uid="uid://m0h54jn181wd" path="res://enemy.gd" id="1_7k104"]
 [ext_resource type="PackedScene" uid="uid://cfuxub1menc4r" path="res://health_component.tscn" id="2_4gyqm"]
@@ -8,37 +8,41 @@
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_qi2p4"]
 
-[node name="Enemy" type="CharacterBody3D"]
+[node name="Enemy" type="CharacterBody3D" unique_id=1689316141]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 collision_layer = 5
 collision_mask = 17
 script = ExtResource("1_7k104")
 separation_radius = 5.0
 
-[node name="NavigationAgent3D" type="NavigationAgent3D" parent="."]
+[node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=1594879706]
 target_desired_distance = 0.5
 avoidance_enabled = true
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1862335068]
 transform = Transform3D(1.092, 0, 0, 0, 1.0368, 0, 0, 0, 1.1, 0, 0, 0)
 shape = SubResource("CapsuleShape3D_qi2p4")
 
-[node name="HealthComponent" parent="." instance=ExtResource("2_4gyqm")]
+[node name="HealthComponent" parent="." unique_id=12900554 instance=ExtResource("2_4gyqm")]
 
-[node name="HealthBarSprite" type="Sprite3D" parent="."]
+[node name="HealthBarSprite" type="Sprite3D" parent="." unique_id=2014951219]
 billboard = 1
 no_depth_test = true
 fixed_size = true
 script = ExtResource("3_iifgy")
 
-[node name="SubViewport" type="SubViewport" parent="HealthBarSprite"]
+[node name="SubViewport" type="SubViewport" parent="HealthBarSprite" unique_id=1058734743]
 transparent_bg = true
 size = Vector2i(100, 20)
 
-[node name="HealthBar" parent="HealthBarSprite/SubViewport" instance=ExtResource("4_epg4t")]
+[node name="HealthBar" parent="HealthBarSprite/SubViewport" unique_id=281690494 instance=ExtResource("4_epg4t")]
 
-[node name="Knight" parent="." instance=ExtResource("5_epg4t")]
+[node name="Knight" parent="." unique_id=913041657 instance=ExtResource("5_epg4t")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.27898, 0)
+
+[node name="DebugLabel" type="Label3D" parent="." unique_id=914969947]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.6815937, 0)
+billboard = 1
 
 [connection signal="target_reached" from="NavigationAgent3D" to="." method="_on_navigation_agent_3d_target_reached"]
 [connection signal="velocity_computed" from="NavigationAgent3D" to="." method="_on_navigation_agent_3d_velocity_computed"]

@@ -6,6 +6,7 @@ extends Node3D
 @export var range_indicator_color: Color = Color(0.0, 0.7, 1.0, 0.3)  # Blue, semi-transparent
 @export var shop_type: String = "Slow Turret"
 @export var shop_cost: int = 100
+@export var show_debug_radius: bool = true
 
 # Node references
 @onready var activation_sound = $ActivationSound
@@ -16,11 +17,12 @@ extends Node3D
 @onready var detection_area = $DetectionArea
 @onready var pickup_area = $PickupDetectionArea
 
+
 # State variables
 var is_active: bool = true
 var is_preview: bool = false
 var original_materials: Dictionary = {}
-var affected_enemies: Dictionary = {}  # Keep track of affected enemies and their original speeds
+var affected_enemies: Dictionary = {}  # Keep track of enemies currently in the zone
 var range_indicator: MeshInstance3D
 var enemies_in_range: int = 0
 var effect_sound_playing: bool = false
@@ -45,7 +47,7 @@ func _ready() -> void:
 		var collision_shape = detection_area.get_node("CollisionShape3D")
 		if collision_shape:
 			var sphere_shape = SphereShape3D.new()
-			sphere_shape.radius = effect_range
+			sphere_shape.radius = effect_range + 7.5
 			collision_shape.shape = sphere_shape
 	
 	# Setup pickup detection area
@@ -70,7 +72,7 @@ func create_range_indicator() -> void:
 	add_child(range_indicator)
 	range_indicator.name = "RangeIndicator"
 	setup_range_indicator()
-	range_indicator.visible = false
+	range_indicator.visible = show_debug_radius
 
 func setup_range_indicator() -> void:
 	# Create a sphere mesh for the range indicator
@@ -125,43 +127,17 @@ func _process(delta: float) -> void:
 			is_winding_down = false
 		effect_sound.play()
 		effect_sound_playing = true
-	
-	# Update affected enemies
-	update_affected_enemies()
-
-func update_affected_enemies() -> void:
-	if !detection_area or !detection_area.monitoring:
-		return
-		
-	var bodies = detection_area.get_overlapping_bodies()
-	
-	# Remove slow effect from enemies that are no longer in range or have been freed
-	var enemies_to_remove = []
-	for enemy in affected_enemies.keys():
-		if !is_instance_valid(enemy) or !bodies.has(enemy):
-			enemies_to_remove.append(enemy)
-	
-	# Remove the enemies outside the loop to avoid modification during iteration
-	for enemy in enemies_to_remove:
-		if is_instance_valid(enemy):
-			remove_slow_effect(enemy)
-		affected_enemies.erase(enemy)
-	
-	# Apply slow effect to enemies in range
-	for body in bodies:
-		if is_instance_valid(body) and body.is_in_group("enemies") and !affected_enemies.has(body):
-			apply_slow_effect(body)
 
 func apply_slow_effect(enemy: Node) -> void:
-	if is_instance_valid(enemy) and enemy.has_method("get_speed"):
-		var original_speed = enemy.get_speed()
-		affected_enemies[enemy] = original_speed
-		enemy.set_speed(original_speed * (1.0 - slow_factor))
+	if is_instance_valid(enemy) and enemy.has_method("apply_slow"):
+		# Since the turret's slow_factor is 0.5, passing (1.0 - 0.5) gives the enemy a 0.5 multiplier
+		enemy.apply_slow(1.0 - slow_factor)
+		affected_enemies[enemy] = true
 
 func remove_slow_effect(enemy: Node) -> void:
 	if is_instance_valid(enemy) and affected_enemies.has(enemy):
-		if enemy.has_method("set_speed"):
-			enemy.set_speed(affected_enemies[enemy])  # Restore original speed
+		if enemy.has_method("remove_slow"):
+			enemy.remove_slow()  # Restore original speed via the enemy's script
 		affected_enemies.erase(enemy)
 
 func _on_detection_area_body_entered(body: Node3D) -> void:
@@ -173,12 +149,18 @@ func _on_detection_area_body_entered(body: Node3D) -> void:
 	# Play activation sound when first enemy enters range
 	if enemies_in_range == 1 and activation_sound:
 		activation_sound.play()
+		
+	# Apply slow immediately
+	apply_slow_effect(body)
 
 func _on_detection_area_body_exited(body: Node3D) -> void:
 	if !is_active or !body.is_in_group("enemies"):
 		return
 	
 	enemies_in_range = max(0, enemies_in_range - 1)
+	
+	# Remove slow immediately
+	remove_slow_effect(body)
 	
 	# When the last enemy exits, play wind down sound
 	if enemies_in_range == 0:
@@ -209,7 +191,7 @@ func set_preview(enable: bool) -> void:
 		restore_original_materials_recursive(self)
 		clear_all_preview_materials()
 		if range_indicator:
-			range_indicator.visible = false
+			range_indicator.visible = show_debug_radius
 
 func set_active(active: bool) -> void:
 	is_active = active
