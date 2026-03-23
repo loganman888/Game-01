@@ -1,4 +1,4 @@
-[gd_scene load_steps=18 format=3 uid="uid://bcau8p5se2yi1"]
+[gd_scene format=3 uid="uid://bcau8p5se2yi1"]
 
 [ext_resource type="Script" uid="uid://dwiilqkwj8t5a" path="res://map.gd" id="1_0t07s"]
 [ext_resource type="PackedScene" uid="uid://tavvx0k43s2n" path="res://player.tscn" id="1_c7s6e"]
@@ -15,6 +15,8 @@
 [ext_resource type="PackedScene" uid="uid://crb75x2ibkikd" path="res://score_ui.tscn" id="9_gqbix"]
 [ext_resource type="PackedScene" uid="uid://dswf11hjr8klc" path="res://turret_platform.tscn" id="10_oysan"]
 [ext_resource type="PackedScene" uid="uid://d2qk4ukrqd3xp" path="res://wave_ui.tscn" id="12_6qsgm"]
+[ext_resource type="PackedScene" uid="uid://b5rohktvbjuoe" path="res://relic_pickup.tscn" id="16_wbpbn"]
+[ext_resource type="PackedScene" uid="uid://dvewtmm6d837k" path="res://hud.tscn" id="17_a6rn7"]
 
 [sub_resource type="NavigationMesh" id="NavigationMesh_e0an3"]
 vertices = PackedVector3Array(-24, 1.41918, -33.0638, -16, 1.41918, -33.0638, -16, 1.41918, -47.0638, -26, 1.41918, -31.0638, -54, 1.41918, -47.0638, -54, 1.41918, 47.9362, -26, 1.41918, 47.9362, 31, 1.41918, -33.0638, 31, 1.41918, -47.0638, -20, 3.41918, 47.9362, 54, 3.41918, 47.9362, -17, 3.41918, 46.9362, -19, 3.41918, 44.9362, 38, 3.41918, -26.0638, 38, 3.41918, -47.0638, 37, 3.41918, -29.0638, 35, 3.41918, -27.0638, -17, 3.41918, -26.0638, -20, 3.41918, -27.0638, -19, 3.41918, -24.0638, 47, 1.41918, -47.0638, 44, 1.41918, -47.0638, 44, 1.41918, -22.0638, 47, 1.41918, -15.0638, -13, 1.41918, 40.9362, -2, 1.41918, 34.9362, -2, 1.41918, -13.0638, -13, 1.41918, -20.0638, 42, 1.41918, -20.0638, 0, 1.41918, -15.0638, 0, 1.41918, 36.9362, 54, 1.41918, 40.9362, 54, 1.41918, 36.9362, 4, 3.41918, 30.9362, 54, 3.41918, 30.9362, 7, 3.41918, 29.9362, 5, 3.41918, 27.9362, 54, 3.41918, -8.06377, 54, 3.41918, -47.0638, 53, 3.41918, -11.0638, 51, 3.41918, -9.06377, 4, 3.41918, -9.06377, 5, 3.41918, -6.06377, 7, 3.41918, -8.06377, 11, 1.41918, -2.06377, 11, 1.41918, 23.9362, 54, 1.41918, 23.9362, 54, 1.41918, -2.06377)
@@ -28,61 +30,61 @@ agent_max_climb = 0.5
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_71pa8"]
 albedo_texture = ExtResource("1_iw27f")
 
-[node name="Map" type="Node3D"]
+[node name="Map" type="Node3D" unique_id=1323517533]
 script = ExtResource("1_0t07s")
 
-[node name="NavigationRegion3D" type="NavigationRegion3D" parent="."]
+[node name="NavigationRegion3D" type="NavigationRegion3D" parent="." unique_id=1546615067]
 navigation_mesh = SubResource("NavigationMesh_e0an3")
 
-[node name="CSGCombiner3D" type="CSGCombiner3D" parent="NavigationRegion3D"]
+[node name="CSGCombiner3D" type="CSGCombiner3D" parent="NavigationRegion3D" unique_id=182921758]
 use_collision = true
 
-[node name="CSGBox3D" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=367376365]
 transform = Transform3D(28.5, 0, 0, 0, 0.1, 0, 0, 0, 14.4144, 0, 0, 0.408085)
 size = Vector3(4, 1, 7)
 material = SubResource("StandardMaterial3D_71pa8")
 
-[node name="CSGBox3D2" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D2" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=596124996]
 transform = Transform3D(-1.70789e-06, -1.63004e-15, -6.02, 9.53674e-07, 1.9, 0, 39.072, 2.98023e-08, -2.63143e-07, 54, 1, -30.5278)
 
-[node name="CSGBox3D3" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D3" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=617444095]
 transform = Transform3D(-39.072, 4.63754e-08, 9.13525e-07, 9.53674e-07, 1.9, -1.17893e-14, -5.89971e-06, 3.30008e-15, -6.05, 29.2067, 1, -8.10548)
 size = Vector3(1.42303, 1, 1)
 
-[node name="CSGBox3D4" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D4" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=1840782831]
 transform = Transform3D(-1.70789e-06, -6.43447e-15, -6.02, 9.53674e-07, 2.4426, 2.4647e-21, 39.072, 3.83132e-08, -2.63143e-07, 37.4711, 1, -39.3033)
 size = Vector3(0.549438, 1, 1)
 
-[node name="CSGBox3D5" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D5" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=424416587]
 transform = Transform3D(-39.072, -2.98023e-08, 5.26285e-07, 9.53674e-07, 1.9, 1.86974e-21, -3.41578e-06, -6.30782e-15, -6.02, 20.9484, 0.319184, -27.0156)
 size = Vector3(1, 2, 1)
 
-[node name="CSGBox3D6" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D6" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=1506005329]
 transform = Transform3D(-39.072, -2.98023e-08, 5.26285e-07, 9.53674e-07, 1.9, 1.86974e-21, -3.41578e-06, -6.30782e-15, -6.02, -10.4923, 1.11332, -27.0177)
 size = Vector3(0.61145, 1.16406, 1)
 
-[node name="CSGBox3D7" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D7" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=33899830]
 transform = Transform3D(-1.70789e-06, -5.00511e-15, -6.02, 9.53674e-07, 1.9, 2.4647e-21, 39.072, 2.98023e-08, -2.63143e-07, -19.4255, 1.26918, 13.2246)
 size = Vector3(1.90906, 1, 1)
 
-[node name="CSGBox3D9" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D9" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=3578631]
 transform = Transform3D(-1.70789e-06, -5.00511e-15, -6.02, 9.53674e-07, 1.9, 2.4647e-21, 39.072, 2.98023e-08, -2.63143e-07, 4.42362, 0.980124, 14.3422)
 
-[node name="CSGBox3D8" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D8" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=1899857454]
 transform = Transform3D(-39.072, -2.98023e-08, 5.26285e-07, 9.53674e-07, 1.9, 2.37982e-21, -3.41578e-06, -6.30782e-15, -6.02, 20.2936, 1.26918, 47.4981)
 size = Vector3(1.88422, 1, 1)
 
-[node name="CSGBox3D10" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D"]
+[node name="CSGBox3D10" type="CSGBox3D" parent="NavigationRegion3D/CSGCombiner3D" unique_id=788763975]
 transform = Transform3D(-39.072, -2.98023e-08, 5.26285e-07, 9.53674e-07, 1.9, 2.37982e-21, -3.41578e-06, -6.30782e-15, -6.02, 32.0413, 0.980124, 30.8657)
 size = Vector3(1.27197, 1, 1)
 
-[node name="player" parent="." instance=ExtResource("1_c7s6e")]
+[node name="player" parent="." unique_id=1428460952 instance=ExtResource("1_c7s6e")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, 2.36126, -8)
 
-[node name="dummy" parent="." instance=ExtResource("2_wijl4")]
+[node name="dummy" parent="." unique_id=1628455561 instance=ExtResource("2_wijl4")]
 transform = Transform3D(-0.528, 0, 0, 0, 1, 0, 0, 0, 1, 52.8962, 0, 39.242)
 
-[node name="Spawner" parent="." instance=ExtResource("3_e0an3")]
+[node name="Spawner" parent="." unique_id=912919749 instance=ExtResource("3_e0an3")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1.1, 44, 1, -43)
 enemy_scenes = {
 "cube": ExtResource("5_6qsgm"),
@@ -93,55 +95,64 @@ spawn_interval = 1.0
 spawn_radius = 2.5
 initial_spawn_delay = 2.0
 
-[node name="CanvasLayer" type="CanvasLayer" parent="."]
+[node name="CanvasLayer" type="CanvasLayer" parent="." unique_id=1081335237]
 
-[node name="PauseMenu" parent="." instance=ExtResource("5_urblq")]
+[node name="PauseMenu" parent="." unique_id=1263594144 instance=ExtResource("5_urblq")]
 
-[node name="TurretMenuUI" parent="." instance=ExtResource("4_p5pve")]
+[node name="TurretMenuUI" parent="." unique_id=1186704245 instance=ExtResource("4_p5pve")]
 
-[node name="DayNightCycle" parent="." instance=ExtResource("7_71pa8")]
+[node name="DayNightCycle" parent="." unique_id=484527274 instance=ExtResource("7_71pa8")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 66.292, 0)
 
-[node name="Teleporter1" parent="." instance=ExtResource("8_05x41")]
+[node name="Teleporter1" parent="." unique_id=1365071858 instance=ExtResource("8_05x41")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 8, 4, -29)
 target_teleporter = NodePath("../Teleporter2")
 
-[node name="Teleporter2" parent="." instance=ExtResource("8_05x41")]
+[node name="Teleporter2" parent="." unique_id=385760941 instance=ExtResource("8_05x41")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 3, -7)
 target_teleporter = NodePath("../Teleporter1")
 
-[node name="ScoreUi" parent="." instance=ExtResource("9_gqbix")]
+[node name="ScoreUi" parent="." unique_id=1950007432 instance=ExtResource("9_gqbix")]
 
-[node name="TurretPlatform" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform" parent="." unique_id=2140756934 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29, 2.2334, -10.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="TurretPlatform2" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform2" parent="." unique_id=1101439411 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 32, 2.2334, -10.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="TurretPlatform3" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform3" parent="." unique_id=1999752291 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 26, 2.2334, -10.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="TurretPlatform4" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform4" parent="." unique_id=1997989039 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 2.2334, -10.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="TurretPlatform5" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform5" parent="." unique_id=571596397 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 2.2334, -24.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="TurretPlatform6" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform6" parent="." unique_id=93566719 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 20, 2.2334, -24.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="TurretPlatform7" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform7" parent="." unique_id=79384776 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 17, 2.2334, -24.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="TurretPlatform8" parent="." instance=ExtResource("10_oysan")]
+[node name="TurretPlatform8" parent="." unique_id=1515142156 instance=ExtResource("10_oysan")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14, 2.2334, -24.6599)
 snap_point = Vector3(0, 1, 0)
 
-[node name="WaveUI" parent="." groups=["wave_ui"] instance=ExtResource("12_6qsgm")]
+[node name="WaveUI" parent="." unique_id=299142558 groups=["wave_ui"] instance=ExtResource("12_6qsgm")]
+
+[node name="RelicPickup" parent="." unique_id=624903935 instance=ExtResource("16_wbpbn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 28.33456, 4.951497, -5.77071)
+
+[node name="RelicPickup2" parent="." unique_id=1683086103 instance=ExtResource("16_wbpbn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 39.143738, 3.6663525, -6.7840457)
+type = 1
+
+[node name="hud" parent="." unique_id=426061286 instance=ExtResource("17_a6rn7")]

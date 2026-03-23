@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://c2maa0u7tan26"]
+
+[ext_resource type="PackedScene" uid="uid://b5rohktvbjuoe" path="res://relic_pickup.tscn" id="1_4js6x"]
+
+[node name="RelicPickup" unique_id=624903935 instance=ExtResource("1_4js6x")]
+relic_name = "Overclock"

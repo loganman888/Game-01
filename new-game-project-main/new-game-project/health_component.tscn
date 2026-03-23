@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://cfuxub1menc4r"]
+[gd_scene format=3 uid="uid://cfuxub1menc4r"]
 
 [ext_resource type="Script" uid="uid://cvsi1jh07jtt7" path="res://health_component.gd" id="1_n21r7"]
 
-[node name="HealthComponent" type="Node"]
+[node name="HealthComponent" type="Node" unique_id=1089270348]
 script = ExtResource("1_n21r7")
 enemy_type = 1
 MaxHealth = 200.0

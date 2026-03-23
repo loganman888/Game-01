@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://df5lwjjx8lvc8"]
+
+[ext_resource type="PackedScene" uid="uid://b5rohktvbjuoe" path="res://relic_pickup.tscn" id="1_acrs3"]
+[ext_resource type="Texture2D" uid="uid://dqyh1og8rom7m" path="res://images/unnamed-removebg-preview.png" id="2_xim7f"]
+
+[node name="RelicPickup" unique_id=624903935 instance=ExtResource("1_acrs3")]
+relic_name = "Budget Permit"
+type = 0
+relic_icon = ExtResource("2_xim7f")

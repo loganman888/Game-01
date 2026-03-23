@@ -17,6 +17,7 @@ extends Node3D
 @onready var pickup_area = $PickupDetectionArea
 @onready var projectile_spawn = $RotationBase/ProjectileSpawn
 @onready var shoot_sound = $ShootSound
+@onready var rate_label = $Label3D # Make sure this matches your node name!
 
 # Preload the projectile scene
 @onready var projectile_scene = preload("res://projectile.tscn")
@@ -60,12 +61,17 @@ func _ready() -> void:
 			collision_shape.disabled = false
 
 func _process(delta: float) -> void:
+	# 1. Update the UI first so we always see our current stats
+	update_rate_label()
+
+	# 2. Existing safety checks
 	if !is_active or is_preview:
 		return
 	
 	if !detection_area or !detection_area.monitoring:
 		return
 	
+	# 3. Existing targeting and shooting logic
 	if current_target and is_instance_valid(current_target):
 		var distance = global_position.distance_to(current_target.global_position)
 		if distance > attack_range:
@@ -200,18 +206,32 @@ func shoot_at_target() -> void:
 	if not current_target or !is_active or !projectile_spawn:
 		return
 	
+	# 1. Spawn and initialize the projectile
 	var projectile = projectile_scene.instantiate()
 	get_tree().root.add_child(projectile)
 	projectile.global_position = projectile_spawn.global_position
-	
 	projectile.initialize(current_target, damage, projectile_speed, self)
 	
-	# Play shooting sound
+	# 2. Play shooting sound
 	if shoot_sound:
 		shoot_sound.play()
 	
+	# --- RAPID FIRE RELIC LOGIC ---
 	can_attack = false
-	await get_tree().create_timer(attack_cooldown).timeout
+	
+	# Look for the player and their fire rate multiplier
+	var player = get_tree().get_first_node_in_group("player")
+	var fire_rate_buff = 1.0
+	if player and "turret_fire_rate_multiplier" in player:
+		fire_rate_buff = player.turret_fire_rate_multiplier
+	
+	# Calculate final wait time (Cooldown divided by Buff)
+	# e.g., 0.5s / 1.2 = 0.41s wait time
+	var final_wait_time = attack_cooldown / fire_rate_buff
+	
+	# Wait for the adjusted time
+	await get_tree().create_timer(final_wait_time).timeout
+	
 	can_attack = true
 
 func _on_detection_area_body_entered(body: Node3D) -> void:
@@ -225,3 +245,19 @@ func _on_detection_area_body_exited(body: Node3D) -> void:
 		return
 	if body == current_target:
 		current_target = find_oldest_enemy(detection_area.get_overlapping_bodies())
+		
+		
+		
+func update_rate_label():
+	# Make sure the variable matches the @onready var rate_label = $Label3D we added
+	if !rate_label: 
+		return
+	
+	var player = get_tree().get_first_node_in_group("player")
+	var current_buff = 1.0
+	
+	if player and "turret_fire_rate_multiplier" in player:
+		current_buff = player.turret_fire_rate_multiplier
+	
+	# Display the multiplier (e.g., "1.2x")
+	rate_label.text = str(current_buff).pad_decimals(1) + "x"

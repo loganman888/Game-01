@@ -26,12 +26,15 @@ var current_speed: float
 var slow_factor: float = 1.0
 var is_dead = false
 var spawn_time: float = 0.0
+var green_flash_mat: StandardMaterial3D = StandardMaterial3D.new()
 
 func _ready() -> void:
 	base_speed = speed
 	current_speed = base_speed
 	spawn_time = Time.get_ticks_msec() / 1000.0  # Current time in seconds
 	add_to_group("enemies")
+	green_flash_mat.albedo_color = Color.GREEN
+	green_flash_mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	
 	motion_mode = MOTION_MODE_GROUNDED
 	set_safe_margin(collision_safe_margin)
@@ -148,31 +151,50 @@ func heal_nearby_enemies() -> void:
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	
 	for enemy in enemies:
-		# Skip self
-		if enemy == self:
+		# Skip self and check if valid
+		if enemy == self or !is_instance_valid(enemy):
 			continue
 			
 		# Check if enemy is within heal radius
 		var distance = global_position.distance_to(enemy.global_position)
 		if distance <= heal_radius:
-			# Get the health component of the nearby enemy
-			var enemy_health = enemy.get_node("HealthComponent")
-			if enemy_health:
-				# Heal the enemy
-				enemy_health.heal(heal_amount)
+			# Get the health component of the nearby enemy safely
+			var enemy_health = enemy.get_node_or_null("HealthComponent")
+			
+			# Check if they have our new overheal function
+			if enemy_health and enemy_health.has_method("apply_overheal"):
+				# 1. Apply the OVERHEAL!
+				enemy_health.apply_overheal(heal_amount)
 				
-				# Visual feedback
-				if enemy.has_node("EnemyModel"):
-					var model = enemy.get_node("EnemyModel")
-					model.modulate = Color.GREEN
-					# Create a timer to reset the color
-					var timer = get_tree().create_timer(0.2)
-					await timer.timeout
-					if is_instance_valid(model):  # Check if model still exists
-						model.modulate = Color.WHITE
+				# 2. Trigger visual feedback 
+				flash_enemy_green(enemy)
+
+# The 3D helper function for the Healer
+func apply_flash_material(node: Node, mat: Material) -> void:
+	if node is MeshInstance3D:
+		node.material_overlay = mat
+		
+	for child in node.get_children():
+		apply_flash_material(child, mat)
+
+func flash_enemy_green(enemy: Node) -> void:
+	if is_instance_valid(enemy) and enemy.has_node("Knight"):
+		var model = enemy.get_node("Knight")
+		
+		# Apply the green flash overlay
+		apply_flash_material(model, green_flash_mat)
+		
+		# Wait 0.2 seconds safely on the main tree
+		await get_tree().create_timer(0.2).timeout
+		
+		# Remove the green flash overlay (by passing null)
+		if is_instance_valid(model): 
+			apply_flash_material(model, null)
 
 func on_death() -> void:
 	emit_signal("died")
+	
+	# The heal loop will now finish completely before moving on
 	heal_nearby_enemies()
 	
 	# Original death behavior

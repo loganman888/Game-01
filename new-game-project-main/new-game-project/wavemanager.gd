@@ -115,7 +115,8 @@ func complete_current_wave():
 func define_waves(enemy_scenes: Dictionary):
 	# Wave 1: 5 cubes
 	var wave1 = Wave.new()
-	wave1.add_enemy(enemy_scenes["knight"], 3)
+	wave1.add_enemy(enemy_scenes["knight"], 15)
+	wave1.add_enemy(enemy_scenes["healer"], 0)
 	waves.append(wave1)
 	
 	# Wave 2: 10 knights, 5 healers
@@ -202,15 +203,30 @@ func get_next_enemy_to_spawn() -> PackedScene:
 	if !current_wave:
 		return null
 		
-	# Find an enemy type that hasn't reached its count yet
+	# 1. Create a temporary list to hold our options
+	var available_enemy_indexes = []
+	
+	# 2. Check every enemy type in the wave to see if it still needs to spawn
 	for i in range(current_wave.enemies.size()):
 		var enemy_data = current_wave.enemies[i]
 		if enemies_spawned_in_wave[i] < enemy_data.count:
-			enemies_spawned_in_wave[i] += 1
-			total_enemies_spawned += 1  # ENHANCEMENT: Track total spawned
-			return enemy_data.scene
+			# If it still needs to spawn, put its index number in the hat!
+			available_enemy_indexes.append(i)
 			
-	return null
+	# 3. If the hat is empty, we have spawned everything
+	if available_enemy_indexes.is_empty():
+		return null
+		
+	# 4. Pick a random enemy index from the hat
+	var random_index = available_enemy_indexes.pick_random()
+	
+	# 5. Update our trackers for the randomly chosen enemy
+	var chosen_enemy = current_wave.enemies[random_index]
+	enemies_spawned_in_wave[random_index] += 1
+	total_enemies_spawned += 1  # ENHANCEMENT: Track total spawned
+	
+	# 6. Return the scene to the spawner
+	return chosen_enemy.scene
 
 func start_waves(p_spawner: Node3D, enemy_scenes: Dictionary):
 	spawner = p_spawner

@@ -33,6 +33,19 @@ func heal(amount: float) -> void:
 	# Increase health but don't exceed max health
 	health = min(health + amount, MaxHealth)
 	emit_signal("health_changed", health, MaxHealth)
+	
+	
+func apply_overheal(amount: float) -> void:
+	# Increase health straight into the pool, bypassing the normal MaxHealth limit
+	health += amount
+	
+	# Cap it at double their normal max health so it doesn't stack infinitely
+	var absolute_max = MaxHealth * 2.0
+	if health > absolute_max:
+		health = absolute_max
+		
+	# Emit the exact same signal so your health bars know the number went up!
+	emit_signal("health_changed", health, MaxHealth)	
 
 func damage(attack: Attack) -> void:
 	health -= attack.damage

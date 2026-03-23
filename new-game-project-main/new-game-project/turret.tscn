@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://b20mscmoltnma"]
+[gd_scene format=3 uid="uid://b20mscmoltnma"]
 
 [ext_resource type="Script" uid="uid://bcapa5qqlqhsj" path="res://turret.gd" id="1_3oylf"]
 [ext_resource type="AudioStream" uid="uid://d3eq2lr661c0o" path="res://sounds/basic turret shooting.mp3" id="2_tjdg3"]
@@ -9,36 +9,41 @@
 
 [sub_resource type="SphereShape3D" id="SphereShape3D_c5apd"]
 
-[node name="Turret" type="Node3D"]
+[node name="Turret" type="Node3D" unique_id=1190386843]
 script = ExtResource("1_3oylf")
 attack_cooldown = 1.0
 
-[node name="RotationBase" type="Node3D" parent="."]
+[node name="RotationBase" type="Node3D" parent="." unique_id=1288923475]
 
-[node name="TurretModel" type="MeshInstance3D" parent="RotationBase"]
+[node name="TurretModel" type="MeshInstance3D" parent="RotationBase" unique_id=800880075]
 mesh = SubResource("SphereMesh_3oylf")
 
-[node name="ProjectileSpawn" type="Node3D" parent="RotationBase"]
+[node name="ProjectileSpawn" type="Node3D" parent="RotationBase" unique_id=2020450999]
 
-[node name="DetectionArea" type="Area3D" parent="."]
+[node name="DetectionArea" type="Area3D" parent="." unique_id=522841407]
 collision_layer = 8
 collision_mask = 8
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectionArea"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectionArea" unique_id=317192019]
 transform = Transform3D(1.32, 0, 0, 0, 1, 0, 0, 0, 1.32, 0, 0, 0)
 shape = SubResource("SphereShape3D_tjdg3")
 
-[node name="PickupDetectionArea" type="Area3D" parent="."]
+[node name="PickupDetectionArea" type="Area3D" parent="." unique_id=718286682]
 transform = Transform3D(1.5, 0, 0, 0, 1.2, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 32
 collision_mask = 32
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupDetectionArea"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupDetectionArea" unique_id=227172617]
 shape = SubResource("SphereShape3D_c5apd")
 
-[node name="ShootSound" type="AudioStreamPlayer3D" parent="."]
+[node name="ShootSound" type="AudioStreamPlayer3D" parent="." unique_id=624114485]
 stream = ExtResource("2_tjdg3")
 max_db = -10.0
+
+[node name="Label3D" type="Label3D" parent="." unique_id=1421480277]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.1134139, 0)
+billboard = 1
+text = "Rate: 1.0x"
 
 [connection signal="body_entered" from="DetectionArea" to="." method="_on_detection_area_body_entered"]
 [connection signal="body_exited" from="DetectionArea" to="." method="_on_detection_area_body_exited"]

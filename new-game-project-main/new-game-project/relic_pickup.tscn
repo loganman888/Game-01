@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://b5rohktvbjuoe"]
+
+[ext_resource type="Script" uid="uid://s2fsv6kn3a2k" path="res://relic_pickup.gd" id="1_fojdn"]
+[ext_resource type="Texture2D" uid="uid://ddb150nfvfqyc" path="res://images/Futuristic turret with electric blue energy.png" id="2_qycbu"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_fojdn"]
+size = Vector3(1.1132202, 1.0717163, 1.0961914)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_qycbu"]
+albedo_color = Color(0, 1, 1, 1)
+
+[sub_resource type="BoxMesh" id="BoxMesh_5kwtf"]
+material = SubResource("StandardMaterial3D_qycbu")
+
+[node name="RelicPickup" type="Area3D" unique_id=624903935]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.73799276, 0)
+collision_layer = 0
+script = ExtResource("1_fojdn")
+type = 1
+relic_icon = ExtResource("2_qycbu")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=460023382]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.017669678, 0.010894775, -0.014404297)
+shape = SubResource("BoxShape3D_fojdn")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1601316191]
+mesh = SubResource("BoxMesh_5kwtf")

@@ -176,19 +176,32 @@ func shoot_at_target() -> void:
 	if not current_target or !is_active or !projectile_spawn:
 		return
 	
+	# 1. Spawn and initialize the projectile
 	var projectile = projectile_scene.instantiate()
 	get_tree().root.add_child(projectile)
 	projectile.global_position = projectile_spawn.global_position
-	
 	projectile.initialize(current_target, damage, projectile_speed, self)
 	
-	# Play the shooting sound with slight pitch variation
+	# 2. Play shooting sound
 	if shoot_sound:
-		shoot_sound.pitch_scale = randf_range(0.95, 1.05)  # Adds variety to the sound
 		shoot_sound.play()
 	
+	# --- RAPID FIRE RELIC LOGIC ---
 	can_attack = false
-	await get_tree().create_timer(attack_cooldown).timeout
+	
+	# Look for the player and their fire rate multiplier
+	var player = get_tree().get_first_node_in_group("player")
+	var fire_rate_buff = 1.0
+	if player and "turret_fire_rate_multiplier" in player:
+		fire_rate_buff = player.turret_fire_rate_multiplier
+	
+	# Calculate final wait time (Cooldown divided by Buff)
+	# e.g., 0.5s / 1.2 = 0.41s wait time
+	var final_wait_time = attack_cooldown / fire_rate_buff
+	
+	# Wait for the adjusted time
+	await get_tree().create_timer(final_wait_time).timeout
+	
 	can_attack = true
 
 func _on_detection_area_body_entered(body: Node3D) -> void:

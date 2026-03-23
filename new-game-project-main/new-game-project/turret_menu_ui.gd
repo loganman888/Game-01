@@ -129,7 +129,11 @@ func setup_turret_buttons():
 		name_label.add_theme_font_size_override("font_size", 14)
 		
 		var instance = data.scene.instantiate()
-		var cost = instance.shop_cost
+		# --- APPLY DISCOUNT HERE ---
+		var player = get_tree().get_first_node_in_group("player")
+		var discount = player.turret_cost_multiplier if player else 1.0
+		var cost = int(instance.shop_cost * discount) 
+		# ---------------------------
 		instance.queue_free()
 		
 		var cost_label = Label.new()
@@ -170,21 +174,40 @@ func setup_turret_buttons():
 
 func _on_item_button_pressed(item_name: String):
 	var data = TURRET_INFO[item_name]
+	
+	# 1. Safety check: Don't buy if the player's hands are already full
 	if pickup_system.current_turret or pickup_system.current_platform:
 		print("Already holding an item!")
 		return
 
-	var instance = data.scene.instantiate()
-	var cost = instance.shop_cost
-	instance.queue_free()
+	# 2. Find the player to check for the discount multiplier
+	var player = get_tree().get_first_node_in_group("player")
+	var discount = 1.0
+	if player and "turret_cost_multiplier" in player:
+		discount = player.turret_cost_multiplier
 
-	if ScoreManager.purchase_turret(cost):
+	# 3. Calculate the final price (Original Cost * Discount)
+	var temp_instance = data.scene.instantiate()
+	var base_cost = temp_instance.shop_cost
+	temp_instance.queue_free()
+	
+	# Using int() ensures we don't have messy decimals like 79.999
+	var final_cost = int(base_cost * discount)
+
+	# 4. Ask the ScoreManager if we can afford the discounted price
+	if ScoreManager.purchase_turret(final_cost):
 		if pickup_system:
+			# If purchase successful, spawn the turret for the player to carry
 			var new_item = data.scene.instantiate()
 			get_tree().get_root().add_child(new_item)
+			
 			if data.type == "turret":
-				pickup_system.pickup_turret(new_item, data.type, cost)
+				# IMPORTANT: Pass final_cost so the refund system gives the right amount back
+				pickup_system.pickup_turret(new_item, data.type, final_cost)
+			
 			toggle_menu()
+	else:
+		print("Not enough points! You need: ", final_cost)
 
 # In your turret menu script, replace the _input function with this:
 func _unhandled_input(event):

@@ -24,6 +24,8 @@ var is_in_targeting_mode: bool = false
 var camera_original_parent: Node
 var camera_original_transform: Transform3D
 var gravity = 9.8
+var turret_cost_multiplier: float = 1.0  # 1.0 = 100% cost, 0.8 = 20% off
+var turret_fire_rate_multiplier: float = 1.0 # 1.0 = normal, 1.2 = 20% faster
 
 func debug_setup():
 	var platforms = get_tree().get_nodes_in_group("turret_platforms")

@@ -1,0 +1,17 @@
+[gd_scene format=3 uid="uid://dvewtmm6d837k"]
+
+[ext_resource type="Script" uid="uid://y0l408gnpubh" path="res://relic_display.gd" id="1_37p78"]
+
+[node name="hud" type="CanvasLayer" unique_id=426061286]
+
+[node name="Control" type="Control" parent="." unique_id=1957267706]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 40.0
+offset_bottom = 40.0
+
+[node name="RelicDisplay" type="HBoxContainer" parent="Control" unique_id=1102085442 groups=["relic_ui"]]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_37p78")
