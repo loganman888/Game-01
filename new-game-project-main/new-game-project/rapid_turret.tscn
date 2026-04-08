@@ -1,4 +1,4 @@
-[gd_scene load_steps=6 format=3 uid="uid://df152xnsqmp14"]
+[gd_scene format=3 uid="uid://df152xnsqmp14"]
 
 [ext_resource type="Script" uid="uid://c0a6hggh0l7w7" path="res://rapid_turret.gd" id="1_jcxgh"]
 [ext_resource type="AudioStream" uid="uid://lbtnimydssi5" path="res://sounds/rapidfireturretshooting.mp3" id="2_kjn25"]
@@ -8,35 +8,37 @@
 [sub_resource type="BoxShape3D" id="BoxShape3D_udiuu"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_2lrmh"]
+size = Vector3(1.6377869, 2.0842285, 2.2739868)
 
-[node name="RapidTurret" type="Node3D"]
+[node name="RapidTurret" type="Node3D" unique_id=703400943]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 script = ExtResource("1_jcxgh")
 
-[node name="RotationBase" type="Node3D" parent="."]
+[node name="RotationBase" type="Node3D" parent="." unique_id=1530743128]
 
-[node name="TurretModel" type="MeshInstance3D" parent="RotationBase"]
+[node name="TurretModel" type="MeshInstance3D" parent="RotationBase" unique_id=689292314]
 mesh = SubResource("PrismMesh_kjn25")
 
-[node name="ProjectileSpawn" type="Node3D" parent="RotationBase"]
+[node name="ProjectileSpawn" type="Node3D" parent="RotationBase" unique_id=1119971106]
 
-[node name="DetectionArea" type="Area3D" parent="."]
+[node name="DetectionArea" type="Area3D" parent="." unique_id=1313202561]
 collision_layer = 8
 collision_mask = 8
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectionArea"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DetectionArea" unique_id=529205785]
 transform = Transform3D(1.32, 0, 0, 0, 1, 0, 0, 0, 1.32, 0, 0, 0)
 shape = SubResource("BoxShape3D_udiuu")
 
-[node name="PickupDetectionArea" type="Area3D" parent="."]
+[node name="PickupDetectionArea" type="Area3D" parent="." unique_id=146174185]
 transform = Transform3D(1.5, 0, 0, 0, 1.2, 0, 0, 0, 1.1, 0, 0, 0)
 collision_layer = 32
 collision_mask = 32
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupDetectionArea"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupDetectionArea" unique_id=938810902]
+transform = Transform3D(0.40000004, 0, 0, 0, 0.4, 0, 0, 0, 0.4, -0.0013122559, 0.007275343, 0.011657706)
 shape = SubResource("BoxShape3D_2lrmh")
 
-[node name="ShootSound" type="AudioStreamPlayer3D" parent="."]
+[node name="ShootSound" type="AudioStreamPlayer3D" parent="." unique_id=1061022219]
 stream = ExtResource("2_kjn25")
 volume_db = -10.0
 

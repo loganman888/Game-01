@@ -76,7 +76,6 @@ func update_held_turret_position() -> void:
 func update_turret_placement() -> void:
 	var space_state = get_world_3d().direct_space_state
 	
-	# Update the held position when not showing preview
 	update_held_turret_position()
 	
 	var ray_length = MAX_PLACEMENT_DISTANCE
@@ -84,9 +83,13 @@ func update_turret_placement() -> void:
 	var to = from - camera.global_transform.basis.z * ray_length
 	
 	var query = PhysicsRayQueryParameters3D.create(from, to)
-	query.exclude = [current_turret, get_parent()]
+	
+	# --- THE MAGIC FIX ---
+	query.collision_mask = 1  # ONLY hit Layer 1 (Platforms). Ignores everything else!
+	# ---------------------
+	
 	query.collide_with_areas = true
-	query.collide_with_bodies = false
+	query.collide_with_bodies = true
 	
 	var result = space_state.intersect_ray(query)
 	placement_valid = false
@@ -96,38 +99,55 @@ func update_turret_placement() -> void:
 		var node = result.collider
 		while node and not node.is_in_group("turret_platforms"):
 			node = node.get_parent()
+			
 		if node and node.is_in_group("turret_platforms"):
 			var platform = node
 			var platform_pos = platform.global_transform.origin + platform.snap_point
 			var distance_to_player = platform_pos.distance_to(get_parent().global_position)
+			
 			current_turret.global_position = platform_pos
 			current_turret.global_rotation = platform.global_rotation
 			
 			if not platform.can_place():
 				current_turret.update_preview_material(preview_material_invalid)
-				current_turret.visible = false  # Hide invalid placement
+				current_turret.visible = false 
 			elif distance_to_player < MIN_PLACEMENT_DISTANCE or distance_to_player > MAX_PLACEMENT_DISTANCE:
 				current_turret.update_preview_material(preview_material_invalid)
-				current_turret.visible = false  # Hide invalid placement
+				current_turret.visible = false 
 			else:
 				current_turret.update_preview_material(preview_material_valid)
-				current_turret.visible = true   # Show valid placement
+				current_turret.visible = true 
 				placement_valid = true
 				placement_platform = platform
 		else:
-			# Hide turret when not over a valid platform
 			current_turret.visible = false
 	else:
 		placement_valid = false
 		current_turret.visible = false
 
-func handle_turret_placement_input() -> void:
-	if turret_menu_open:
-		return
+func handle_turret_placement_input():
+	if turret_menu_open: return
+	
+	# --- DIAGNOSTIC CLICK CHECK ---
+	if Input.is_action_just_pressed("mouse_left"):
+		print("\n--- MOUSE 1 CLICKED ---")
+		print("1. Is placement_valid true?: ", placement_valid)
 		
-	if Input.is_action_just_pressed("mouse_left") and placement_valid:
-		place_turret()
-	elif Input.is_action_just_pressed("sell"):  # Changed from "mouse_right" to "sell"
+		if placement_platform:
+			print("2. Platform detected: ", placement_platform.name)
+			print("3. Can platform place?: ", placement_platform.can_place())
+		else:
+			print("2. Platform detected: NONE")
+			
+		# The actual placement execution
+		if placement_valid:
+			print("RESULT: SUCCESS - Placing Turret!")
+			place_turret()
+		else:
+			print("RESULT: FAILED - The click was ignored because placement was invalid on this exact frame.")
+	# ------------------------------
+
+	elif Input.is_action_just_pressed("sell"):
 		cancel_turret_placement()
 
 func place_turret() -> void:

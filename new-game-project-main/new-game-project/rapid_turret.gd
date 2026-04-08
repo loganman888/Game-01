@@ -52,12 +52,6 @@ func _ready() -> void:
 		pickup_area.monitoring = true
 		pickup_area.monitorable = true
 		
-		var collision_shape = pickup_area.get_node("CollisionShape3D")
-		if collision_shape:
-			var sphere_shape = SphereShape3D.new()
-			sphere_shape.radius = 2.0
-			collision_shape.shape = sphere_shape
-			collision_shape.disabled = false
 
 func _process(delta: float) -> void:
 	if !is_active or is_preview:
@@ -150,8 +144,9 @@ func set_active(active: bool) -> void:
 		detection_area.monitorable = active
 	
 	if pickup_area:
-		pickup_area.monitoring = true
-		pickup_area.monitorable = true
+		# --- THE FIX: Change from 'true' to 'active' ---
+		pickup_area.monitoring = active
+		pickup_area.monitorable = active
 
 func find_new_target() -> Node3D:
 	if !is_active or !detection_area or !detection_area.monitoring:

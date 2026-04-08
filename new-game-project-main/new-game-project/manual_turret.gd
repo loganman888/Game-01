@@ -43,7 +43,6 @@ func _ready() -> void:
 	add_to_group("turrets")
 	player = get_tree().get_first_node_in_group("player")
 	
-	# Setup detection area (for interaction range)
 	if detection_area:
 		detection_area.collision_layer = 8
 		detection_area.collision_mask = 4
@@ -53,70 +52,31 @@ func _ready() -> void:
 			sphere_shape.radius = effect_range
 			collision_shape.shape = sphere_shape
 	
-	# Setup pickup detection area
 	if pickup_area:
 		pickup_area.collision_layer = 32
 		pickup_area.collision_mask = 32
 		pickup_area.monitoring = true
 		pickup_area.monitorable = true
-		var collision_shape = pickup_area.get_node("CollisionShape3D")
-		if collision_shape:
-			var sphere_shape = SphereShape3D.new()
-			sphere_shape.radius = 2.0
-			collision_shape.shape = sphere_shape
-			collision_shape.disabled = false
 	
-	# Create range indicator only
 	create_range_indicator()
+
+# --- THE NEW BRIDGE FROM THE PLAYER SCRIPT ---
+func start_manual_control() -> void:
+	if is_active and not is_preview and can_interact and not is_targeting_mode:
+		enter_targeting_mode()
 
 func _input(event: InputEvent) -> void:
 	if not is_active or is_preview or not can_interact:
 		return
 		
-	if event.is_action_pressed("use"):
-		var player = get_tree().get_first_node_in_group("player")
-		if not player:
-			return
-			
-		# Get the camera and check if player is looking at the turret
-		var camera = player.get_node_or_null("Head/Camera3D")
-		if not camera:
-			print("Camera not found")
-			return
-			
-		# Setup raycast from camera
-		var space_state = get_world_3d().direct_space_state
-		var start_pos = camera.global_position
-		var end_pos = start_pos - camera.global_transform.basis.z * interaction_distance
-		
-		var query = PhysicsRayQueryParameters3D.create(start_pos, end_pos)
-		query.exclude = [player]
-		query.collide_with_areas = true
-		query.collide_with_bodies = true
-		
-		var result = space_state.intersect_ray(query)
-		
-		if result:
-			# Check if we hit this turret or its collision area
-			var hit_node = result.collider
-			while hit_node:
-				if hit_node == self or hit_node == detection_area:
-					if not is_targeting_mode and global_position.distance_to(player.global_position) <= interaction_distance:
-						enter_targeting_mode()
-					break
-				hit_node = hit_node.get_parent()
-	
-	# Only handle mouse clicks when in targeting mode
-	elif is_targeting_mode:
+	# ONLY handle inputs if we are already in targeting mode
+	if is_targeting_mode:
 		if event is InputEventMouseButton:
 			if event.button_index == MOUSE_BUTTON_LEFT and event.pressed:
-				# Confirm target location and apply damage
 				apply_damage_at_preview()
 				exit_targeting_mode()
 			elif event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-				# Cancel targeting mode
 				exit_targeting_mode()
-		# Keep escape as an additional way to cancel
 		elif event.is_action_pressed("ui_cancel"):
 			exit_targeting_mode()
 
@@ -171,13 +131,11 @@ func create_targeting_indicator() -> void:
 
 func _process(delta: float) -> void:
 	if !is_active or is_preview:
-		# Pulse effect for range indicator during preview
 		if range_indicator and range_indicator.visible:
 			pulse_time += delta * pulse_speed
 			var pulse = (sin(pulse_time) * pulse_strength) + 1.0
 			range_indicator.scale = Vector3.ONE * pulse
 			
-			# Update transparency based on pulse
 			var material = range_indicator.material_override as StandardMaterial3D
 			if material:
 				var alpha = range_indicator_color.a * (0.8 + (sin(pulse_time) * 0.2))
@@ -188,23 +146,22 @@ func _process(delta: float) -> void:
 		update_targeting_position()
 
 func update_targeting_position() -> void:
-	# Get the camera directly from the scene tree since it's temporarily parented to root
 	var camera = get_viewport().get_camera_3d()
-	if not camera:
-		return
+	if not camera: return
 		
 	var mouse_pos = get_viewport().get_mouse_position()
-	
 	var ray_length = 1000
 	var from = camera.project_ray_origin(mouse_pos)
 	var to = from + camera.project_ray_normal(mouse_pos) * ray_length
 	
 	var space_state = get_world_3d().direct_space_state
 	var query = PhysicsRayQueryParameters3D.create(from, to)
-	query.exclude = [self]
+	
+	# --- THE AIM FIX ---
+	query.collision_mask = 1 # ONLY hit Layer 1 (The ground/environment)
+	# -------------------
 	
 	var result = space_state.intersect_ray(query)
-	
 	if result:
 		targeting_indicator.global_position = result.position
 		targeting_indicator.global_position.y += 0.05
@@ -214,73 +171,64 @@ func enter_targeting_mode() -> void:
 	is_targeting_mode = true
 	targeting_indicator.visible = true
 	
-	# Use player's camera system with turret position
 	if player and player.has_method("enter_targeting_mode"):
 		var camera_position = global_position + Vector3(0, targeting_camera_height, 0)
 		player.enter_targeting_mode(targeting_camera_height, targeting_camera_tilt, camera_position)
 
 func exit_targeting_mode() -> void:
 	is_targeting_mode = false
-	if targeting_indicator:
-		targeting_indicator.visible = false
-	
-	# Return player's camera to normal
+	if targeting_indicator: targeting_indicator.visible = false
 	if player and player.has_method("exit_targeting_mode"):
 		player.exit_targeting_mode()
 
 func play_fire_sound() -> void:
-	if fire_sound:
-		fire_sound.play()
+	if fire_sound: fire_sound.play()
 
 func play_impact_sound_at_location(position: Vector3) -> void:
-	# Create temporary audio player at target location
 	var temp_audio = AudioStreamPlayer3D.new()
 	get_tree().get_root().add_child(temp_audio)
 	
-	# Copy properties from the impact audio player
 	if impact_sound:
 		temp_audio.stream = impact_sound.stream
 		temp_audio.volume_db = impact_sound.volume_db
 		temp_audio.max_distance = impact_sound.max_distance
 		temp_audio.attenuation_model = impact_sound.attenuation_model
 	
-	# Position the audio player
 	temp_audio.global_position = position
-	
-	# Play the sound
 	temp_audio.play()
-	
-	# Wait for sound to finish and then remove
 	await temp_audio.finished
 	temp_audio.queue_free()
 
 func apply_damage_at_preview() -> void:
+	# --- THE FIX: Lock the turret immediately! ---
+	can_interact = false 
+	# ---------------------------------------------
+	
 	var damage_position = targeting_indicator.global_position
 	
-	# Play fire sound from turret location
 	play_fire_sound()
 	
-	# Wait for the delay before impact
+	# The pause happens here, but the doors are already locked!
 	await get_tree().create_timer(damage_delay).timeout
 	
-	# Play impact sound at target location
 	play_impact_sound_at_location(damage_position)
 	
-	# Get all enemies in radius
 	var enemies = get_tree().get_nodes_in_group("enemies")
 	for enemy in enemies:
-		# Create positions that ignore Y axis for distance calculation
 		var flat_damage_pos = Vector2(damage_position.x, damage_position.z)
 		var flat_enemy_pos = Vector2(enemy.global_position.x, enemy.global_position.z)
-		
-		# Calculate distance ignoring height (y-axis)
 		var distance = flat_damage_pos.distance_to(flat_enemy_pos)
 		
 		if distance <= effect_range:
-			if enemy.has_method("apply_damage"):
+			if enemy.has_node("HealthComponent"):
+				var hc = enemy.get_node("HealthComponent")
+				if hc.has_method("damage"):
+					var new_attack = Attack.new(damage_amount, self)
+					hc.damage(new_attack)
+			
+			elif enemy.has_method("apply_damage"):
 				enemy.apply_damage(damage_amount)
 	
-	# Start cooldown
 	start_cooldown()
 
 func start_cooldown() -> void:
@@ -299,13 +247,11 @@ func set_preview(enable: bool) -> void:
 		store_original_materials_recursive(self)
 		set_active(false)
 		visible = true
-		if range_indicator:
-			range_indicator.visible = true
+		if range_indicator: range_indicator.visible = true
 	else:
 		restore_original_materials_recursive(self)
 		clear_all_preview_materials()
-		if range_indicator:
-			range_indicator.visible = false
+		if range_indicator: range_indicator.visible = false
 
 func set_active(active: bool) -> void:
 	is_active = active
@@ -318,8 +264,9 @@ func set_active(active: bool) -> void:
 		detection_area.monitorable = active
 	
 	if pickup_area:
-		pickup_area.monitoring = true
-		pickup_area.monitorable = true
+		# FIXED: Prevents the bubble from blocking your view while holding it!
+		pickup_area.monitoring = active 
+		pickup_area.monitorable = active
 
 func update_preview_material(material: StandardMaterial3D) -> void:
 	if is_preview:
@@ -332,7 +279,6 @@ func apply_preview_material_recursive(node: Node, material: StandardMaterial3D) 
 			original_materials[node] = node.get_surface_override_material(0)
 		node.material_override = material
 		node.visible = true
-	
 	for child in node.get_children():
 		apply_preview_material_recursive(child, material)
 
@@ -340,7 +286,6 @@ func store_original_materials_recursive(node: Node) -> void:
 	if node is MeshInstance3D and node != range_indicator:
 		original_materials[node] = node.get_surface_override_material(0)
 		node.visible = true
-	
 	for child in node.get_children():
 		store_original_materials_recursive(child)
 
@@ -351,7 +296,6 @@ func restore_original_materials_recursive(node: Node) -> void:
 		else:
 			node.material_override = null
 		node.visible = true
-	
 	for child in node.get_children():
 		restore_original_materials_recursive(child)
 
