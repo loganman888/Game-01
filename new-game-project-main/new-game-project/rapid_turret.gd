@@ -1,4 +1,3 @@
-# turret.gd - Working version with platform support
 extends Node3D
 
 # Export variables for turret configuration
@@ -10,13 +9,20 @@ extends Node3D
 @export var shop_type: String = "Rapid Turret"
 @export var shop_cost: int = 75
 
+# --- NEW: DURABILITY VARIABLES ---
+@export var max_durability: float = 100.0
+@export var durability_loss_per_shot: float = 0.2  # Lower loss because it fires so fast!
+var current_durability: float
+var is_broken: bool = false
+# ---------------------------------
+
 # Node references
 @onready var rotation_base = $RotationBase
 @onready var turret_model = $RotationBase/TurretModel
 @onready var detection_area = $DetectionArea
 @onready var pickup_area = $PickupDetectionArea
 @onready var projectile_spawn = $RotationBase/ProjectileSpawn
-@onready var shoot_sound = $ShootSound  # New audio reference
+@onready var shoot_sound = $ShootSound  
 
 # Preload the projectile scene
 @onready var projectile_scene = preload("res://projectile.tscn")
@@ -33,6 +39,7 @@ var platform: Node = null
 
 func _ready() -> void:
 	add_to_group("turrets")
+	current_durability = max_durability # Start at full health!
 	
 	# Setup combat detection area
 	if detection_area:
@@ -51,10 +58,10 @@ func _ready() -> void:
 		pickup_area.collision_mask = 32   # Layer 6 (Pickup)
 		pickup_area.monitoring = true
 		pickup_area.monitorable = true
-		
 
 func _process(delta: float) -> void:
-	if !is_active or is_preview:
+	# Stop aiming and shooting if broken!
+	if !is_active or is_preview or is_broken:
 		return
 	
 	if !detection_area or !detection_area.monitoring:
@@ -77,7 +84,38 @@ func _process(delta: float) -> void:
 		if can_attack:
 			shoot_at_target()
 
-# PLATFORM LOGIC here (matches your other turret version)
+# --- DECAY AND REPAIR LOGIC ---
+func apply_decay() -> void:
+	if is_preview or is_broken: return
+	
+	current_durability -= durability_loss_per_shot
+	if current_durability <= 0:
+		current_durability = 0
+		break_turret()
+
+func break_turret() -> void:
+	is_broken = true
+	current_target = null
+	if detection_area:
+		detection_area.monitoring = false 
+		
+func repair_step(amount: float) -> void:
+	if current_durability >= max_durability: 
+		return
+		
+	current_durability += amount
+	
+	if is_broken and current_durability > 0:
+		is_broken = false
+		if detection_area and is_active:
+			detection_area.monitoring = true
+			detection_area.monitorable = true
+			
+	if current_durability > max_durability:
+		current_durability = max_durability
+# -----------------------------------
+
+# PLATFORM LOGIC 
 func set_preview(enable: bool) -> void:
 	is_preview = enable
 	if is_preview:
@@ -140,16 +178,16 @@ func set_active(active: bool) -> void:
 		can_attack = true
 	
 	if detection_area:
-		detection_area.monitoring = active
-		detection_area.monitorable = active
+		# Don't turn the detection back on if it's broken!
+		detection_area.monitoring = active and not is_broken 
+		detection_area.monitorable = active and not is_broken
 	
 	if pickup_area:
-		# --- THE FIX: Change from 'true' to 'active' ---
 		pickup_area.monitoring = active
 		pickup_area.monitorable = active
 
 func find_new_target() -> Node3D:
-	if !is_active or !detection_area or !detection_area.monitoring:
+	if !is_active or !detection_area or !detection_area.monitoring or is_broken:
 		return null
 	var bodies = detection_area.get_overlapping_bodies()
 	return find_closest_enemy(bodies)
@@ -171,42 +209,38 @@ func shoot_at_target() -> void:
 	if not current_target or !is_active or !projectile_spawn:
 		return
 	
-	# 1. Spawn and initialize the projectile
 	var projectile = projectile_scene.instantiate()
 	get_tree().root.add_child(projectile)
 	projectile.global_position = projectile_spawn.global_position
 	projectile.initialize(current_target, damage, projectile_speed, self)
 	
-	# 2. Play shooting sound
 	if shoot_sound:
 		shoot_sound.play()
 	
-	# --- RAPID FIRE RELIC LOGIC ---
+	# Apply decay every time we shoot!
+	apply_decay()
+	
 	can_attack = false
 	
-	# Look for the player and their fire rate multiplier
 	var player = get_tree().get_first_node_in_group("player")
 	var fire_rate_buff = 1.0
 	if player and "turret_fire_rate_multiplier" in player:
 		fire_rate_buff = player.turret_fire_rate_multiplier
 	
-	# Calculate final wait time (Cooldown divided by Buff)
-	# e.g., 0.5s / 1.2 = 0.41s wait time
 	var final_wait_time = attack_cooldown / fire_rate_buff
 	
-	# Wait for the adjusted time
 	await get_tree().create_timer(final_wait_time).timeout
 	
 	can_attack = true
 
 func _on_detection_area_body_entered(body: Node3D) -> void:
-	if !is_active:
+	if !is_active or is_broken:
 		return
 	if body.is_in_group("enemies") and not current_target:
 		current_target = find_closest_enemy(detection_area.get_overlapping_bodies())
 
 func _on_detection_area_body_exited(body: Node3D) -> void:
-	if !is_active:
+	if !is_active or is_broken:
 		return
 	if body == current_target:
 		current_target = find_closest_enemy(detection_area.get_overlapping_bodies())

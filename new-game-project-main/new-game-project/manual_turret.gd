@@ -12,6 +12,13 @@ extends Node3D
 @export var targeting_camera_tilt: float = -90.0  # Straight down view
 @export var damage_delay: float = 0.5  # Time in seconds before damage is applied
 
+# --- NEW: DURABILITY VARIABLES ---
+@export var max_durability: float = 100.0
+@export var durability_loss_per_shot: float = 10.0  # 10 massive strikes before it breaks
+var current_durability: float
+var is_broken: bool = false
+# ---------------------------------
+
 # Node references
 @onready var rotation_base = $RotationBase
 @onready var turret_model = $RotationBase/TurretModel
@@ -42,6 +49,7 @@ var pulse_strength: float = 0.2
 func _ready() -> void:
 	add_to_group("turrets")
 	player = get_tree().get_first_node_in_group("player")
+	current_durability = max_durability # Start at full health
 	
 	if detection_area:
 		detection_area.collision_layer = 8
@@ -62,7 +70,8 @@ func _ready() -> void:
 
 # --- THE NEW BRIDGE FROM THE PLAYER SCRIPT ---
 func start_manual_control() -> void:
-	if is_active and not is_preview and can_interact and not is_targeting_mode:
+	# Prevent entry if the turret is broken!
+	if is_active and not is_preview and can_interact and not is_targeting_mode and not is_broken:
 		enter_targeting_mode()
 
 func _input(event: InputEvent) -> void:
@@ -200,15 +209,15 @@ func play_impact_sound_at_location(position: Vector3) -> void:
 	temp_audio.queue_free()
 
 func apply_damage_at_preview() -> void:
-	# --- THE FIX: Lock the turret immediately! ---
 	can_interact = false 
-	# ---------------------------------------------
 	
 	var damage_position = targeting_indicator.global_position
 	
 	play_fire_sound()
 	
-	# The pause happens here, but the doors are already locked!
+	# --- NEW: Apply decay upon firing ---
+	apply_decay()
+	
 	await get_tree().create_timer(damage_delay).timeout
 	
 	play_impact_sound_at_location(damage_position)
@@ -230,6 +239,39 @@ func apply_damage_at_preview() -> void:
 				enemy.apply_damage(damage_amount)
 	
 	start_cooldown()
+
+# --- DECAY AND REPAIR LOGIC ---
+func apply_decay() -> void:
+	if is_preview or is_broken: return
+	
+	current_durability -= durability_loss_per_shot
+	if current_durability <= 0:
+		current_durability = 0
+		break_turret()
+
+func break_turret() -> void:
+	is_broken = true
+	# Kick the player out of the camera if it breaks!
+	if is_targeting_mode:
+		exit_targeting_mode()
+	if detection_area:
+		detection_area.monitoring = false 
+		
+func repair_step(amount: float) -> void:
+	if current_durability >= max_durability: 
+		return
+		
+	current_durability += amount
+	
+	if is_broken and current_durability > 0:
+		is_broken = false
+		if detection_area and is_active:
+			detection_area.monitoring = true
+			detection_area.monitorable = true
+			
+	if current_durability > max_durability:
+		current_durability = max_durability
+# -----------------------------------
 
 func start_cooldown() -> void:
 	can_interact = false
@@ -260,11 +302,10 @@ func set_active(active: bool) -> void:
 	set_physics_process(active)
 	
 	if detection_area:
-		detection_area.monitoring = active
-		detection_area.monitorable = active
+		detection_area.monitoring = active and not is_broken
+		detection_area.monitorable = active and not is_broken
 	
 	if pickup_area:
-		# FIXED: Prevents the bubble from blocking your view while holding it!
 		pickup_area.monitoring = active 
 		pickup_area.monitorable = active
 

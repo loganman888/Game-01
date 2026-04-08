@@ -78,6 +78,12 @@ func complete_current_wave():
 		completion_check_timer.stop()
 		completion_check_timer.queue_free()
 		completion_check_timer = null
+		
+	# --- THE REPAIR ENERGY REPLENISHMENT ---
+	var player = get_tree().get_first_node_in_group("player")
+	if player and player.has_method("replenish_repair_energy"):
+		player.replenish_repair_energy()
+	# ---------------------------------------
 	
 	emit_signal("wave_completed", current_wave_index)
 	

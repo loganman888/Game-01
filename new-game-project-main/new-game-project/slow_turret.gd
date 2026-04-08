@@ -8,6 +8,13 @@ extends Node3D
 @export var shop_cost: int = 100
 @export var show_debug_radius: bool = true
 
+# --- NEW: DURABILITY VARIABLES ---
+@export var max_durability: float = 100.0
+@export var durability_loss_per_sec: float = 2.0  # Loses 2 HP per second while actively slowing enemies
+var current_durability: float
+var is_broken: bool = false
+# ---------------------------------
+
 # Node references
 @onready var activation_sound = $ActivationSound
 @onready var effect_sound = $EffectSound
@@ -16,7 +23,6 @@ extends Node3D
 @onready var turret_model = $RotationBase/TurretModel
 @onready var detection_area = $DetectionArea
 @onready var pickup_area = $PickupDetectionArea
-
 
 # State variables
 var is_active: bool = true
@@ -38,6 +44,7 @@ var platform: Node = null # Reference to the TurretPlatform the turret is placed
 
 func _ready() -> void:
 	add_to_group("turrets")
+	current_durability = max_durability # Start at full health
 	
 	# Setup effect detection area
 	if detection_area:
@@ -56,13 +63,6 @@ func _ready() -> void:
 		pickup_area.collision_mask = 32   # Layer 6 (Pickup)
 		pickup_area.monitoring = true
 		pickup_area.monitorable = true
-		
-		var collision_shape = pickup_area.get_node("CollisionShape3D")
-		if collision_shape:
-			var sphere_shape = SphereShape3D.new()
-			sphere_shape.radius = 2.0
-			collision_shape.shape = sphere_shape
-			collision_shape.disabled = false
 	
 	# Create range indicator
 	create_range_indicator()
@@ -75,15 +75,13 @@ func create_range_indicator() -> void:
 	range_indicator.visible = show_debug_radius
 
 func setup_range_indicator() -> void:
-	# Create a sphere mesh for the range indicator
 	var sphere_mesh = SphereMesh.new()
 	sphere_mesh.radius = effect_range
-	sphere_mesh.height = effect_range * 2  # Sphere height should be double the radius
+	sphere_mesh.height = effect_range * 2  
 	sphere_mesh.radial_segments = 32
 	sphere_mesh.rings = 16
 	range_indicator.mesh = sphere_mesh
 	
-	# Create and set up the material
 	var material = StandardMaterial3D.new()
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.albedo_color = range_indicator_color
@@ -92,13 +90,10 @@ func setup_range_indicator() -> void:
 	material.emission_energy_multiplier = 1.5
 	material.cull_mode = BaseMaterial3D.CULL_DISABLED
 	range_indicator.material_override = material
-	
-	# Center the range indicator on the turret
 	range_indicator.position = Vector3.ZERO
 
 func _process(delta: float) -> void:
-	if !is_active or is_preview:
-		# Stop sounds if they're playing and we're not active
+	if !is_active or is_preview or is_broken:
 		if effect_sound_playing:
 			effect_sound.stop()
 			effect_sound_playing = false
@@ -106,63 +101,98 @@ func _process(delta: float) -> void:
 			wind_down_sound.stop()
 			is_winding_down = false
 		
-		# Pulse effect for range indicator during preview
 		if range_indicator and range_indicator.visible:
 			pulse_time += delta * pulse_speed
 			var pulse = (sin(pulse_time) * pulse_strength) + 1.0
 			range_indicator.scale = Vector3.ONE * pulse
 			
-			# Update transparency based on pulse
 			var material = range_indicator.material_override as StandardMaterial3D
 			if material:
 				var alpha = range_indicator_color.a * (0.8 + (sin(pulse_time) * 0.2))
 				material.albedo_color.a = alpha
 		return
 	
+	# --- NEW: Drain health slowly while actively doing work ---
+	if enemies_in_range > 0:
+		apply_decay(durability_loss_per_sec * delta)
+		
 	# Handle effect sound
 	if enemies_in_range > 0 and !effect_sound_playing and effect_sound:
 		if is_winding_down:
-			# If we're winding down, wait for it to finish
 			await wind_down_sound.finished
 			is_winding_down = false
 		effect_sound.play()
 		effect_sound_playing = true
 
+# --- DECAY AND REPAIR LOGIC ---
+func apply_decay(amount: float) -> void:
+	if is_preview or is_broken: return
+	
+	current_durability -= amount
+	if current_durability <= 0:
+		current_durability = 0
+		break_turret()
+
+func break_turret() -> void:
+	is_broken = true
+	
+	# CRITICAL: Let go of all enemies immediately so they aren't permanently slowed!
+	var enemies_to_remove = affected_enemies.keys()
+	for enemy in enemies_to_remove:
+		if is_instance_valid(enemy):
+			remove_slow_effect(enemy)
+	affected_enemies.clear()
+	enemies_in_range = 0
+	
+	if detection_area:
+		detection_area.monitoring = false 
+		
+func repair_step(amount: float) -> void:
+	if current_durability >= max_durability: 
+		return
+		
+	current_durability += amount
+	
+	if is_broken and current_durability > 0:
+		is_broken = false
+		if detection_area and is_active:
+			detection_area.monitoring = true
+			detection_area.monitorable = true
+			
+	if current_durability > max_durability:
+		current_durability = max_durability
+# -----------------------------------
+
 func apply_slow_effect(enemy: Node) -> void:
 	if is_instance_valid(enemy) and enemy.has_method("apply_slow"):
-		# Since the turret's slow_factor is 0.5, passing (1.0 - 0.5) gives the enemy a 0.5 multiplier
 		enemy.apply_slow(1.0 - slow_factor)
 		affected_enemies[enemy] = true
 
 func remove_slow_effect(enemy: Node) -> void:
 	if is_instance_valid(enemy) and affected_enemies.has(enemy):
 		if enemy.has_method("remove_slow"):
-			enemy.remove_slow()  # Restore original speed via the enemy's script
+			enemy.remove_slow()  
 		affected_enemies.erase(enemy)
 
 func _on_detection_area_body_entered(body: Node3D) -> void:
-	if !is_active or !body.is_in_group("enemies"):
+	if !is_active or is_broken or !body.is_in_group("enemies"):
 		return
 	
 	enemies_in_range += 1
 	
-	# Play activation sound when first enemy enters range
 	if enemies_in_range == 1 and activation_sound:
 		activation_sound.play()
 		
-	# Apply slow immediately
 	apply_slow_effect(body)
 
 func _on_detection_area_body_exited(body: Node3D) -> void:
-	if !is_active or !body.is_in_group("enemies"):
+	if !is_active or is_broken or !body.is_in_group("enemies"):
 		return
 	
 	enemies_in_range = max(0, enemies_in_range - 1)
 	
-	# Remove slow immediately
 	remove_slow_effect(body)
 	
-	# When the last enemy exits, play wind down sound
 	if enemies_in_range == 0:
 		if effect_sound:
 			effect_sound.stop()
@@ -171,7 +201,6 @@ func _on_detection_area_body_exited(body: Node3D) -> void:
 		if wind_down_sound and !is_winding_down:
 			is_winding_down = true
 			wind_down_sound.play()
-			# Wait for wind down sound to finish
 			await wind_down_sound.finished
 			is_winding_down = false
 
@@ -200,7 +229,6 @@ func set_active(active: bool) -> void:
 	set_physics_process(active)
 	
 	if !active:
-		# Stop all sounds when turret becomes inactive
 		if effect_sound_playing and effect_sound:
 			effect_sound.stop()
 			effect_sound_playing = false
@@ -209,7 +237,6 @@ func set_active(active: bool) -> void:
 		is_winding_down = false
 		enemies_in_range = 0
 		
-		# Remove slow effect from all affected enemies when deactivated
 		var enemies_to_remove = affected_enemies.keys()
 		for enemy in enemies_to_remove:
 			if is_instance_valid(enemy):
@@ -217,12 +244,12 @@ func set_active(active: bool) -> void:
 		affected_enemies.clear()
 	
 	if detection_area:
-		detection_area.monitoring = active
-		detection_area.monitorable = active
+		detection_area.monitoring = active and not is_broken
+		detection_area.monitorable = active and not is_broken
 	
 	if pickup_area:
-		pickup_area.monitoring = true
-		pickup_area.monitorable = true
+		pickup_area.monitoring = active
+		pickup_area.monitorable = active
 
 func update_preview_material(material: StandardMaterial3D) -> void:
 	if is_preview:

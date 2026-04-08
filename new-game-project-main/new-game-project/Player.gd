@@ -20,12 +20,21 @@ var gravity: float = 9.8
 var turret_cost_multiplier: float = 1.0 
 var turret_fire_rate_multiplier: float = 1.0 
 
+# --- REPAIR SYSTEM STATS ---
+var max_repair_energy: float = 100.0
+var current_repair_energy: float = 100.0
+var base_repair_rate: float = 25.0         # Heals 25 HP per second
+var repair_speed_multiplier: float = 1.0   # 1.0 = normal, 2.0 = double speed
+var repair_energy_regen: float = 10.0      # How much comes back per round
+
 @onready var head = $Head
 @onready var camera = $Head/Camera3D
 @onready var health_lbl: Label = $HealthLbl
 @onready var health_component: Node = $HealthComponent
 @onready var pickup_system = $PickupSystem
 @onready var unlock_prompt_label = $UnlockPromptLabel
+@onready var energy_bar: ProgressBar = $HUD/EnergyBar
+
 
 func debug_setup():
 	for platform in get_tree().get_nodes_in_group("turret_platforms"):
@@ -36,6 +45,11 @@ func _ready():
 	Input.set_mouse_mode(Input.MOUSE_MODE_CAPTURED)
 	debug_setup()
 	setup_crosshair()
+	
+	
+	if energy_bar:
+		energy_bar.max_value = max_repair_energy
+		energy_bar.value = current_repair_energy
 
 func _input(event):
 	if is_in_targeting_mode: return
@@ -57,12 +71,16 @@ func _input(event):
 	if Input.is_action_just_pressed("use") or Input.is_action_just_pressed("interact"):
 		handle_interaction()
 
-func _process(_delta: float) -> void:
+func _process(delta: float) -> void:
 	if health_component:
 		health_lbl.text = str(health_component.health)
 	update_ui_prompt()
-
-# --- CORE INTERACTION LOGIC ---
+	
+	handle_continuous_repair(delta)
+	
+	# --- ADD THIS LINE ---
+	if energy_bar:
+		energy_bar.value = current_repair_energy
 
 func get_interactable_in_crosshair() -> Node:
 	var space_state = get_world_3d().direct_space_state
@@ -103,13 +121,24 @@ func update_ui_prompt() -> void:
 			unlock_prompt_label.visible = true
 			return
 		elif target.is_in_group("turrets"):
-			unlock_prompt_label.text = "Press 'F' to Pick Up | Press 'E' to Use"
+			# Get HP safely (defaults to 100 if the turret doesn't have the durability variables yet)
+			var hp = int(target.current_durability) if "current_durability" in target else 100
+			var max_hp = int(target.max_durability) if "max_durability" in target else 100
+			var my_energy = int(current_repair_energy)
+			
+			if target.get("is_broken") == true:
+				unlock_prompt_label.text = "[BROKEN] HP: %d/%d | Your Energy: %d\nHold 'R' to Repair | 'F' to Pick Up" % [hp, max_hp, my_energy]
+				unlock_prompt_label.modulate = Color(1, 0.2, 0.2) # Make text red
+			else:
+				unlock_prompt_label.text = "HP: %d/%d | Your Energy: %d\nHold 'R' to Repair | 'F' to Pick Up | 'E' to Use" % [hp, max_hp, my_energy]
+				unlock_prompt_label.modulate = Color(1, 1, 1) # Normal white text
+			
 			unlock_prompt_label.visible = true
 			return
 			
 	# 2. If we aren't looking at anything interactable, but we ARE holding a turret
 	if pickup_system and pickup_system.current_turret:
-		unlock_prompt_label.text = "Left Click to Place | 'Sell' to Cancel" # Feel free to change this text!
+		unlock_prompt_label.text = "Left Click to Place | 'Sell' to Cancel" 
 		unlock_prompt_label.visible = true
 		return
 		
@@ -132,16 +161,49 @@ func handle_interaction() -> void:
 				unlock_prompt_label.text = "Not enough points!"
 				await get_tree().create_timer(1.5).timeout
 	
-	# F Key -> Pickup Turret (Changed from 'E' based on your previous messages)
+	# F Key -> Pickup Turret
 	if Input.is_action_just_pressed("use") and target.is_in_group("turrets"):
 		if "shop_type" in target:
 			pickup_system.pickup_turret(target, target.shop_type, target.shop_cost)
-			
 			
 	# E Key -> Use Turret (Manual Control)
 	if Input.is_action_just_pressed("interact") and target.is_in_group("turrets"):
 		if target.has_method("start_manual_control"):
 			target.start_manual_control()
+
+# 4. Continuous Actions (Holding a button)
+func handle_continuous_repair(delta: float) -> void:
+	# Use is_action_pressed (not just_pressed) because we are HOLDING the key
+	if not Input.is_action_pressed("repair"):
+		return
+		
+	var target = get_interactable_in_crosshair()
+	
+	if target and target.is_in_group("turrets") and target.has_method("repair_step"):
+		var current_hp = target.get("current_durability")
+		var max_hp = target.get("max_durability")
+		
+		# If the turret is hurt AND we have energy to spend...
+		if current_hp < max_hp and current_repair_energy > 0:
+			
+			# Calculate how much we can heal in this exact frame
+			var heal_amount = base_repair_rate * repair_speed_multiplier * delta
+			
+			# Prevent spending more energy than the turret actually needs to reach 100%
+			var missing_hp = max_hp - current_hp
+			
+			# Using min() ensures we never heal more than we need OR more than we have energy for
+			heal_amount = min(heal_amount, min(missing_hp, current_repair_energy))
+			
+			if heal_amount > 0:
+				current_repair_energy -= heal_amount
+				target.repair_step(heal_amount)
+
+# 5. Replenish Energy (Call this from your WaveManager when a round ends!)
+func replenish_repair_energy() -> void:
+	current_repair_energy += repair_energy_regen
+	if current_repair_energy > max_repair_energy:
+		current_repair_energy = max_repair_energy
 
 # --- MOVEMENT AND HELPERS (Unchanged) ---
 
