@@ -21,11 +21,12 @@ var turret_cost_multiplier: float = 1.0
 var turret_fire_rate_multiplier: float = 1.0 
 
 # --- REPAIR SYSTEM STATS ---
-var max_repair_energy: float = 100.0
+@export var max_repair_energy: float = 100.0
 var current_repair_energy: float = 100.0
 var base_repair_rate: float = 25.0         # Heals 25 HP per second
 var repair_speed_multiplier: float = 1.0   # 1.0 = normal, 2.0 = double speed
-var repair_energy_regen: float = 10.0      # How much comes back per round
+@export var repair_energy_regen: float = 25.0    # How much comes back per round
+@export var turret_siphon_percent: float = 0.0
 
 @onready var head = $Head
 @onready var camera = $Head/Camera3D
@@ -34,6 +35,9 @@ var repair_energy_regen: float = 10.0      # How much comes back per round
 @onready var pickup_system = $PickupSystem
 @onready var unlock_prompt_label = $UnlockPromptLabel
 @onready var energy_bar: ProgressBar = $HUD/EnergyBar
+
+
+
 
 
 func debug_setup():
@@ -199,11 +203,17 @@ func handle_continuous_repair(delta: float) -> void:
 				current_repair_energy -= heal_amount
 				target.repair_step(heal_amount)
 
-# 5. Replenish Energy (Call this from your WaveManager when a round ends!)
 func replenish_repair_energy() -> void:
+	# 1. Add the regeneration amount
 	current_repair_energy += repair_energy_regen
+	
+	# 2. Check against the maximum (fixed the double 'y' here)
 	if current_repair_energy > max_repair_energy:
 		current_repair_energy = max_repair_energy
+	
+	# 3. Update the UI bar immediately so you see it move
+	if energy_bar:
+		energy_bar.value = current_repair_energy
 
 # --- MOVEMENT AND HELPERS (Unchanged) ---
 

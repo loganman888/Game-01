@@ -78,14 +78,18 @@ func complete_current_wave():
 		completion_check_timer.stop()
 		completion_check_timer.queue_free()
 		completion_check_timer = null
-		
-	# --- THE REPAIR ENERGY REPLENISHMENT ---
+
+	# --- THE REPAIR REFILL FIX ---
+	# We find the player in the "player" group and tell them to refill
 	var player = get_tree().get_first_node_in_group("player")
 	if player and player.has_method("replenish_repair_energy"):
 		player.replenish_repair_energy()
-	# ---------------------------------------
+		print("Repair Energy Refilled!") # Debug check
+	# -----------------------------
 	
 	emit_signal("wave_completed", current_wave_index)
+	
+	# ... rest of your wave transition logic follows ...
 	
 	# Move to next wave
 	current_wave_index += 1

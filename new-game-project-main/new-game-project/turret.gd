@@ -11,7 +11,7 @@ extends Node3D
 
 # --- NEW: DURABILITY VARIABLES ---
 @export var max_durability: float = 100.0
-@export var durability_loss_per_shot: float = 25.0  # Loses 5 HP per shot (20 shots = broken)
+@export var durability_loss_per_shot: float = 5.0  # Loses 5 HP per shot (20 shots = broken)
 var current_durability: float
 var is_broken: bool = false
 # ---------------------------------

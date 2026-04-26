@@ -1,0 +1,9 @@
+[gd_scene format=3 uid="uid://cxc6nt4vx3stx"]
+
+[ext_resource type="PackedScene" uid="uid://c2maa0u7tan26" path="res://relic_rapid_fire.tscn" id="1_o4i67"]
+[ext_resource type="Texture2D" uid="uid://ilkkuba6rjwl" path="res://images/siphon shot.png" id="2_utnp3"]
+
+[node name="RelicPickup" unique_id=624903935 instance=ExtResource("1_o4i67")]
+relic_name = "Siphoning Shot"
+relic_icon = ExtResource("2_utnp3")
+type = 2

@@ -13,8 +13,8 @@ const SCORE_VALUE: int = 100
 @export var movement_smoothing := 0.2
 
 # --- RELIC EXPORTS ---
-@export var drop_items: Array[PackedScene] = []
-@export_range(0, 1.0) var drop_chance: float = 1.0 
+@export var loot_table: Array[Dictionary] = [] 
+@export_range(0, 1.0) var drop_chance: float = 0.5 
 
 @onready var navigation_agent: NavigationAgent3D = $NavigationAgent3D
 @onready var health_component: Node = $HealthComponent
@@ -126,41 +126,41 @@ func die():
 	queue_free()
 
 func apply_instant_relic():
-	# 1. Check drop chance
-	if randf() > drop_chance or drop_items.is_empty():
+	# 1. Roll for the general drop chance
+	if randf() > drop_chance or loot_table.is_empty():
 		return
 		
 	var player = get_tree().get_first_node_in_group("player")
-	var hud = get_tree().get_first_node_in_group("relic_ui")
-	if !player or !hud:
-		return
+	if !player: return
 
-	# 2. Get names of relics we ALREADY have from the HUD tooltips
-	var owned_relic_names = []
-	for icon_wrapper in hud.get_children():
-		var actual_icon = icon_wrapper.get_child(0)
-		if actual_icon:
-			owned_relic_names.append(actual_icon.tooltip_text)
+	# 2. Calculate Total Weight
+	var total_weight = 0.0
+	for entry in loot_table:
+		total_weight += entry.get("weight", 1.0)
 
-	# 3. Re-roll Logic: Shuffle the list and find the first one we don't own
-	var potential_drops = drop_items.duplicate()
-	potential_drops.shuffle() # Makes the drop feel random
-	
-	for relic_scene in potential_drops:
-		var relic_instance = relic_scene.instantiate()
+	# 3. Roll a random number between 0 and total_weight
+	var roll = randf() * total_weight
+	var current_sum = 0.0
+	var chosen_scene: PackedScene = null
+
+	# 4. Find which "weight bracket" the roll fell into
+	for entry in loot_table:
+		current_sum += entry.get("weight", 1.0)
+		if roll <= current_sum:
+			chosen_scene = entry.get("item")
+			break
+
+	# 5. Instantiate and apply (ONLY DO THIS ONCE!)
+	if chosen_scene:
+		var relic_instance = chosen_scene.instantiate()
+		get_tree().root.add_child(relic_instance)
 		
-		# If we don't own this one, apply it!
-		if not relic_instance.relic_name in owned_relic_names:
-			print("!!! Found a new relic for player: ", relic_instance.relic_name)
-			get_tree().root.add_child(relic_instance)
-			relic_instance.apply_relic_buff(player)
-			relic_instance.queue_free()
-			return # STOP once we give one item
-		else:
-			# If we already owned it, delete the instance and try the next one in the loop
-			relic_instance.queue_free()
-	
-	print("!!! Player already owns all possible relics in this enemy's drop table.")
+		# Give the buff to the player
+		relic_instance.apply_relic_buff(player)
+		print("!!! Enemy Dropped: ", relic_instance.relic_name)
+		
+		# Clean it up immediately
+		relic_instance.queue_free()
 
 # --- Helpers ---
 func update_model_and_animation(movement_velocity: Vector3) -> void:

@@ -6,6 +6,7 @@
 [ext_resource type="PackedScene" uid="uid://c2maa0u7tan26" path="res://relic_rapid_fire.tscn" id="3_hb8ge"]
 [ext_resource type="Script" uid="uid://dutcferf0gkxw" path="res://enemy_health_display.gd" id="3_iifgy"]
 [ext_resource type="PackedScene" uid="uid://dhmuglnnbucmr" path="res://health_bar.tscn" id="4_epg4t"]
+[ext_resource type="PackedScene" uid="uid://cxc6nt4vx3stx" path="res://relic_siphoning_shot.tscn" id="4_hb8ge"]
 [ext_resource type="PackedScene" uid="uid://bxc31nwt2layf" path="res://knight.tscn" id="5_epg4t"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_qi2p4"]
@@ -16,8 +17,17 @@ collision_layer = 5
 collision_mask = 17
 script = ExtResource("1_7k104")
 separation_radius = 5.0
-drop_items = Array[PackedScene]([ExtResource("2_wujgv"), ExtResource("3_hb8ge")])
-drop_chance = 0.2
+loot_table = Array[Dictionary]([{
+"item": ExtResource("2_wujgv"),
+"weight": 33.0
+}, {
+"item": ExtResource("3_hb8ge"),
+"weight": 33.0
+}, {
+"item": ExtResource("4_hb8ge"),
+"weight": 33.0
+}])
+drop_chance = 1.0
 
 [node name="NavigationAgent3D" type="NavigationAgent3D" parent="." unique_id=1594879706]
 target_desired_distance = 0.5
